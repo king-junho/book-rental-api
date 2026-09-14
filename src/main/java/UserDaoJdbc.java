@@ -1,16 +1,17 @@
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.lang.Nullable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class UserDaoJdbc implements UserDao {
     private JdbcTemplate jdbcTemplate;
-    private DataSource dataSource;
+
+    @Override
+    public void setDataSource(DataSource datasource) {
+        this.jdbcTemplate = new JdbcTemplate(datasource);
+    }
 
     private RowMapper<User> userMapper = (rs, rowNum) ->{
         User user = new User();
@@ -22,27 +23,29 @@ public class UserDaoJdbc implements UserDao {
     };
 
     @Override
-    public void setDataSource(DataSource datasource) {
-        this.jdbcTemplate = new JdbcTemplate(datasource);
-        //this.dataSource = datasource;
-    }
-
-    @Override
     public void deleteAll() {
         this.jdbcTemplate.update("delete from users");
     }
 
     @Override
-    public void signup(User user) throws DuplicateKeyException{
-        this.jdbcTemplate.update("insert into users(id,name,password) values(?,?,?)", user.getId(),user.getName(),user.getPassword());
-    }
-
-    @Override
-    public User login(String id, String password) {
+    public User findById(String id) {
         try{
-            return this.jdbcTemplate.queryForObject("select * from users where id=? and password=?",userMapper,id,password);
+            return this.jdbcTemplate.queryForObject("select * from users where id = ?",userMapper,id);
         }catch(EmptyResultDataAccessException e){
             return null;
         }
+
+    }
+
+    @Override
+    public void add(User user,String hashedPassword) {
+        this.jdbcTemplate.update("insert into users(id,password,name) values(?,?,?)",user.getId(),hashedPassword,user.getName());
+    }
+
+    @Override
+    public boolean isExist(String id) {
+        Integer count = this.jdbcTemplate.queryForObject("select count(*) from users where id = ?",Integer.class,id);
+
+        return count!=null && count >0 ;
     }
 }

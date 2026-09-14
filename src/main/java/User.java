@@ -5,10 +5,16 @@ public class User {
     private String password;
     private String name;
 
+    //이메일 형식 검증 상수
+    private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\\.[a-zA-Z]{2,}$";
+
     public User(){
     }
 
     public User(String id, String password, String name) {
+        if(id==null || !id.matches(EMAIL_REGEX)){
+            throw new IllegalArgumentException("유효하지 않은 이메일 형식입니다. "+ id);
+        }
         this.id = id;
         this.password = password;
         this.name = name;
@@ -18,6 +24,9 @@ public class User {
         return this.id;
     }
     public void setId(String id) {
+        if(id==null || !id.matches(EMAIL_REGEX)){
+            throw new IllegalArgumentException("유효하지 않은 이메일 형식입니다. "+id);
+        }
         this.id = id;
     }
 
