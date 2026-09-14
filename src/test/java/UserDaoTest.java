@@ -3,12 +3,15 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class UserDaoTest {
-    public UserDao userDao=new UserDao();
+    public UserDao userDao;
 
     @BeforeEach
     void setUp(){
+        ConnectionMaker connectionMaker = new MySqlConnectionMaker();
+        userDao = new UserDao(connectionMaker);
         userDao.deleteAll();
     }
+
 
     @Test
     public void loginAndSignup() {
