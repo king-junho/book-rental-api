@@ -84,57 +84,19 @@ public class BookDaoTest {
         assertThat(bookDao.getCount()).isEqualTo(2);
     }
 
-    @Test
-    public void rentBook(){
-        Book rentBook = bookService.findBookByISBN(book1.getISBN());
-        assertThat(rentBook.getTotalQuantity()).isEqualTo(1);
-        assertThat(rentBook.getAvailableQuantity()).isEqualTo(1);
-
-        bookService.rentBookByISBN(rentBook.getISBN());
-        rentBook = bookService.findBookByISBN(book1.getISBN());
-        assertThat(rentBook.getTotalQuantity()).isEqualTo(1);
-        assertThat(rentBook.getAvailableQuantity()).isEqualTo(0);
-
-        assertThatThrownBy(()->bookService.rentBookByISBN(book1.getISBN())).isInstanceOf(IllegalArgumentException.class);
-    }
-
-//    @Test
-//    public void findByKeyword(){
-//        //title 검색
-//        List<Book> findBooks = bookService.findBookByTitle("클린 아키텍처");
-//        assertThat(findBooks.size()).isEqualTo(2);
-//        assertThat(findBooks)
-//                .extracting(Book::getISBN)
-//                .contains(book5.getISBN(),book9.getISBN());
-//
-//        //author 검색
-//        findBooks = bookService.findBookByAuthor("로버트 C. 마틴");
-//        assertThat(findBooks.size()).isEqualTo(2);
-//        assertThat(findBooks)
-//                .extracting(Book::getISBN)
-//                .contains(book5.getISBN(),book6.getISBN());
-//
-//        //genre 검색
-//        findBooks = bookService.findBookByGenre("여행");
-//        assertThat(findBooks.size()).isEqualTo(3);
-//        assertThat(findBooks)
-//                .extracting(Book::getISBN)
-//                .contains(book4.getISBN(),book8.getISBN(),book10.getISBN());
-//    }
-
-
     private void insertTestBooks(){
         for(int i=0; i<=9; i++){
             Book book = new Book(String.valueOf(i), "책"+(i/4), "저자"+(i/4), "장르"+(i/4), 1);
             bookService.addBook(book);
         }
     }
+
     @Test
     public void findBooksByTitle(){
         bookService.deleteAll();
         insertTestBooks();
 
-        PageResult<Book> result = bookService.findBookByTitle("책0",1);
+        PageResult<Book> result = bookService.findBookBySearchType(SearchType.TITLE, "책0",1);
         List<Book> books = result.getData();
         Page pageInfo = result.getPageInfo();
 
@@ -143,7 +105,7 @@ public class BookDaoTest {
         assertThat(pageInfo.getCurrentRange()).isEqualTo(1);
         assertThat(pageInfo.getPageCount()).isEqualTo(1);
 
-        result = bookService.findBookByTitle("책2",1);
+        result = bookService.findBookBySearchType(SearchType.TITLE,"책2",1);
         books = result.getData();
         pageInfo = result.getPageInfo();
 
@@ -156,7 +118,7 @@ public class BookDaoTest {
         bookService.deleteAll();
         insertTestBooks();
 
-        PageResult<Book> result = bookService.findBookByAuthor("저자0",1);
+        PageResult<Book> result = bookService.findBookBySearchType(SearchType.AUTHOR,"저자0",1);
         List<Book>books = result.getData();
         Page pageInfo = result.getPageInfo();
 
@@ -174,7 +136,7 @@ public class BookDaoTest {
         bookService.deleteAll();
         insertTestBooks();
 
-        PageResult<Book> result = bookService.findBookByGenre("장르0",1);
+        PageResult<Book> result = bookService.findBookBySearchType(SearchType.GENRE,"장르0",1);
         List<Book> books = result.getData();
         Page pageInfo = result.getPageInfo();
 

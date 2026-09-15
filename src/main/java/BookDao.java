@@ -11,11 +11,6 @@ public interface BookDao {
     public void updateQuantity(Book book);
     public void deleteById(String isbn);
 
-    public List<Book> findByTitle(String title,int limit, int offset);
-    public List<Book> findByAuthor(String author, int limit, int offset);
-    public List<Book> findByGenre(String genre, int limit, int offset);
-
-    public int getCountByTitle(String title);
-    public int getCountByAuthor(String author);
-    public int getCountByGenre(String genre);
+    public List<Book> findBySearchType(SearchType searchType, String keyword, int limit, int offset);
+    public int getCountBySearchType(SearchType searchType, String keyword);
 }

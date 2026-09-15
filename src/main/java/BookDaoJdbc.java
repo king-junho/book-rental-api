@@ -1,9 +1,7 @@
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-
 import javax.sql.DataSource;
-import java.util.ArrayList;
 import java.util.List;
 
 public class BookDaoJdbc implements BookDao {
@@ -68,40 +66,35 @@ public class BookDaoJdbc implements BookDao {
         return this.jdbcTemplate.query(sql,bookMapper,searchKeyword,limit,offset);
     }
 
-    @Override
-    public List<Book> findByTitle(String title, int limit, int offset) {
-        return findByColumnName("title",title,limit,offset);
-    }
-
-    @Override
-    public List<Book> findByAuthor(String author, int limit, int offset){
-        return findByColumnName("author", author,limit,offset);
-    }
-
-    @Override
-    public List<Book> findByGenre(String genre, int limit, int offset){
-        return findByColumnName("genre",genre,limit,offset);
-    }
-
     public int getCount() {
         return this.jdbcTemplate.queryForObject("select count(*) from books",Integer.class);
     }
 
-    private int getCountByColumn(String colName, String keyword){
-        String searchKeyword = "%"+keyword+"%";
-        return this.jdbcTemplate.queryForObject("select count(*) from books where "+colName+" like ?",Integer.class,searchKeyword);
+    private String getColumnName(SearchType type){
+        switch(type){
+            case TITLE:return "title";
+            case AUTHOR:return "author";
+            case GENRE:return "genre";
+            default : throw new IllegalArgumentException("지원하지 않는 검색 조건입니다.");
+        }
     }
 
     @Override
-    public int getCountByTitle(String title){
-        return getCountByColumn("title",title);
+    public List<Book> findBySearchType(SearchType type, String keyword, int limit, int offset) {
+        String searchKeyword = "%"+keyword+"%";
+        String colName = getColumnName(type);
+        String sql = "select * from books where "+colName+" like ? limit ? offset ?";
+
+        return this.jdbcTemplate.query(sql,bookMapper,searchKeyword,limit,offset);
     }
+
     @Override
-    public int getCountByAuthor(String author){
-        return getCountByColumn("author", author);
-    }
-    @Override
-    public int getCountByGenre(String genre){
-        return getCountByColumn("genre",genre);
+    public int getCountBySearchType(SearchType type, String keyword){
+        String searchKeyword = "%"+keyword+"%";
+        String colName = getColumnName(type);
+        String sql = "select count(*) from books where "+colName+" like ?";
+
+        return this.jdbcTemplate.queryForObject(sql ,Integer.class,searchKeyword);
+
     }
 }
