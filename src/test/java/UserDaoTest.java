@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration("/applicationContext.xml")
+@ContextConfiguration("/userDaoTestContext.xml")
 public class UserDaoTest {
     @Autowired private UserService userService;
     private User user1,user2,user3;
