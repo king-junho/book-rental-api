@@ -92,10 +92,8 @@ public class Book {
         if(this.totalQuantity<=0 || this.availableQuantity<=0){
             throw new IllegalArgumentException("삭제할 책이 없습니다.");
         }
-        
+
         this.totalQuantity--;
         this.availableQuantity--;
     }
-
-
 }

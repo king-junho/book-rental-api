@@ -1,5 +1,4 @@
-    import javax.swing.tree.RowMapper;
-    import java.util.List;
+import java.util.List;
 
     public class BookService {
 
@@ -64,15 +63,28 @@
             return bookDao.findByISBN(ISBN);
         }
 
-        public List<Book> findBookByTitle(String title) {
-            return bookDao.findByTitle(title);
+        public PageResult<Book> findBookByTitle(String title, int currentPage) {
+            int searchCount = bookDao.getCountByTitle(title);
+            Page pageInfo = new Page(searchCount,currentPage);
+            List<Book> books = bookDao.findByTitle(title,pageInfo.getPageSize(),pageInfo.getStartIndex());
+
+            return new PageResult<>(pageInfo,books);
         }
 
-        public List<Book> findBookByAuthor(String author) {
-            return bookDao.findByAuthor(author);
+        public PageResult<Book> findBookByAuthor(String author, int currentPage) {
+            int searchCount = bookDao.getCountByAuthor(author);
+            Page pageInfo = new Page(searchCount, currentPage);
+            List<Book> books = bookDao.findByAuthor(author, pageInfo.getPageSize(),pageInfo.getStartIndex());
+
+
+            return new PageResult<>(pageInfo,books);
         }
 
-        public List<Book> findBookByGenre(String genre) {
-            return bookDao.findByGenre(genre);
+        public PageResult<Book> findBookByGenre(String genre, int currentPage) {
+            int searchCount = bookDao.getCountByGenre(genre);
+            Page pageInfo = new Page(searchCount,currentPage);
+            List<Book> books = bookDao.findByGenre(genre, pageInfo.getPageSize(),pageInfo.getStartIndex());
+
+            return new PageResult<>(pageInfo,books);
         }
     }

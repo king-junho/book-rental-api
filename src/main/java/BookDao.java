@@ -10,7 +10,12 @@ public interface BookDao {
     public Book findByISBN(String isbn);
     public void updateQuantity(Book book);
     public void deleteById(String isbn);
-    public List<Book> findByTitle(String title);
-    public List<Book> findByAuthor(String author);
-    public List<Book> findByGenre(String genre);
+
+    public List<Book> findByTitle(String title,int limit, int offset);
+    public List<Book> findByAuthor(String author, int limit, int offset);
+    public List<Book> findByGenre(String genre, int limit, int offset);
+
+    public int getCountByTitle(String title);
+    public int getCountByAuthor(String author);
+    public int getCountByGenre(String genre);
 }
