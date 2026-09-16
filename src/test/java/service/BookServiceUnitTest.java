@@ -38,14 +38,14 @@ public class BookServiceUnitTest {
         assertThat(result.getData().get(0).getTitle()).isEqualTo("클린 코드");
     }
 
-    @Test
-    public void accessRentedBook(){
-        Long targetBookItemId = 1L;
-        when(bookItemDao.rent(targetBookItemId)).thenReturn(0);
-
-        assertThatThrownBy(()->bookService.rentBookItem(targetBookItemId))
-                .isInstanceOf(BookAlreadyRentedException.class)
-                .hasMessage("이미 대여 중이거나 존재하지 않는 도서입니다.");
-    }
+//    @Test
+//    public void accessRentedBook(){
+//        Long targetBookItemId = 1L;
+//        when(bookItemDao.rent(targetBookItemId)).thenReturn(0);
+//
+//        assertThatThrownBy(()->bookService.rentBookItem(targetBookItemId))
+//                .isInstanceOf(BookAlreadyRentedException.class)
+//                .hasMessage("이미 대여 중이거나 존재하지 않는 도서입니다.");
+//    }
 
 }

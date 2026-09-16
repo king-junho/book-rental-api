@@ -1,6 +1,7 @@
 package dao;
 
 import domain.User;
+import exception.EntityNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -32,7 +33,7 @@ public class UserDaoJdbc implements UserDao {
         try{
             return this.jdbcTemplate.queryForObject("select * from users where id = ?",userMapper,id);
         }catch(EmptyResultDataAccessException e){
-            return null;
+            throw new EntityNotFoundException("해당 유저를 찾을 수 없습니다. id : "+id);
         }
 
     }

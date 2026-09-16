@@ -2,6 +2,7 @@ package dao;
 
 import domain.Book;
 import domain.enums.SearchType;
+import exception.EntityNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -52,19 +53,8 @@ public class BookDaoJdbc implements BookDao {
         try{
             return this.jdbcTemplate.queryForObject("select * from books where ISBN=?",bookMapper,id);
         }catch(EmptyResultDataAccessException e){
-            return null;
+            throw new EntityNotFoundException("해당 책을 찾을 수 없습니다. ISBN : "+id);
         }
-    }
-
-    private List<Book> findByColumnName(String colName, String keyword, int limit, int offset){
-        String searchKeyword = "%"+keyword+"%";
-        String sql = "select * from books where "+colName+" like ? limit ? offset ?";
-
-        return this.jdbcTemplate.query(sql,bookMapper,searchKeyword,limit,offset);
-    }
-
-    public int getCount() {
-        return this.jdbcTemplate.queryForObject("select count(*) from books",Integer.class);
     }
 
     private String getColumnName(SearchType type){
@@ -92,6 +82,5 @@ public class BookDaoJdbc implements BookDao {
         String sql = "select count(*) from books where "+colName+" like ?";
 
         return this.jdbcTemplate.queryForObject(sql ,Integer.class,searchKeyword);
-
     }
 }

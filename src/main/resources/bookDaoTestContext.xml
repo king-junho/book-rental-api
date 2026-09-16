@@ -3,8 +3,12 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="bookItemService" class="service.BookItemService">
+    <bean id="rentalService" class="service.RentalService">
 
+    </bean>
+    <bean id="bookItemService" class="service.BookItemService">
+        <constructor-arg ref="bookItemDao"/>
+        <constructor-arg ref="rentalService"/>
     </bean>
 
     <bean id="bookService" class="service.BookService">
