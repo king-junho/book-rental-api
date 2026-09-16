@@ -1,23 +1,23 @@
+package dao;
+
+import domain.User;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import javax.sql.DataSource;
 
 public class UserDaoJdbc implements UserDao {
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    @Override
-    public void setDataSource(DataSource datasource) {
-        this.jdbcTemplate = new JdbcTemplate(datasource);
+    public UserDaoJdbc(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
-
     private RowMapper<User> userMapper = (rs, rowNum) ->{
-        User user = new User();
-        user.setId(rs.getString("id"));
-        user.setName(rs.getString("name"));
-        user.setPassword(rs.getString("password"));
+        String id = rs.getString("id");
+        String password = rs.getString("password");
+        String name = rs.getString("name");
+
+        User user = new User(id,password,name);
 
         return user;
     };
@@ -38,14 +38,15 @@ public class UserDaoJdbc implements UserDao {
     }
 
     @Override
-    public void add(User user,String hashedPassword) {
+    public void add(User user, String hashedPassword) {
         this.jdbcTemplate.update("insert into users(id,password,name) values(?,?,?)",user.getId(),hashedPassword,user.getName());
     }
 
     @Override
     public boolean isExist(String id) {
-        Integer count = this.jdbcTemplate.queryForObject("select count(*) from users where id = ?",Integer.class,id);
+        String sql = "select exists(select 1 from users where id = ?)";
+        Boolean exists = this.jdbcTemplate.queryForObject(sql, Boolean.class,id);
 
-        return count!=null && count >0 ;
+        return Boolean.TRUE.equals(exists);
     }
 }

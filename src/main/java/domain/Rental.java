@@ -1,11 +1,8 @@
-import java.time.LocalDate;
-import java.util.Date;
+package domain;
 
-enum RentalStatus{
-    RENTED,
-    RETURNED,
-    OVERDUE,
-};
+import domain.enums.RentalStatus;
+
+import java.time.LocalDate;
 
 public class Rental {
     private final String id;

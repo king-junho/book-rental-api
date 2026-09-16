@@ -1,15 +1,12 @@
-import java.time.LocalDate;
+package domain;
 
 public class User {
-    private String id;
+    private final String id;
     private String password;
     private String name;
 
     //이메일 형식 검증 상수
-    private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9]+\\.[a-zA-Z]{2,}$";
-
-    public User(){
-    }
+    private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
     public User(String id, String password, String name) {
         if(id==null || !id.matches(EMAIL_REGEX)){
@@ -22,12 +19,6 @@ public class User {
 
     public String getId() {
         return this.id;
-    }
-    public void setId(String id) {
-        if(id==null || !id.matches(EMAIL_REGEX)){
-            throw new IllegalArgumentException("유효하지 않은 이메일 형식입니다. "+id);
-        }
-        this.id = id;
     }
 
     public String getPassword() {

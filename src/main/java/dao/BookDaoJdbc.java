@@ -1,24 +1,26 @@
+package dao;
+
+import domain.Book;
+import domain.enums.SearchType;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import javax.sql.DataSource;
 import java.util.List;
 
 public class BookDaoJdbc implements BookDao {
-    JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    @Override
-    public void setDataSource(DataSource datasource) {
-        this.jdbcTemplate = new JdbcTemplate(datasource);
+    public BookDaoJdbc(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     private RowMapper<Book> bookMapper = (rs, rowNum)->{
-        Book book = new Book(rs.getString("ISBN"));
-        book.setTitle(rs.getString("title"));
-        book.setAuthor(rs.getString("author"));
-        book.setGenre(rs.getString("genre"));
-        book.setTotalQuantity(rs.getInt("totalQuantity"));
-        book.setAvailableQuantity(rs.getInt("availableQuantity"));
+        String ISBN = rs.getString("ISBN");
+        String title = rs.getString("title");
+        String author = rs.getString("author");
+        String genre = rs.getString("genre");
+
+        Book book = new Book(ISBN,title,author,genre);
 
         return book;
     };
@@ -34,29 +36,24 @@ public class BookDaoJdbc implements BookDao {
 
     @Override
     public void add(Book book) {
-        this.jdbcTemplate.update("insert into books(ISBN,title,author,genre,totalQuantity,availableQuantity) values(?,?,?,?,?,?)",book.getISBN(),book.getTitle(),book.getAuthor(),book.getGenre(),book.getTotalQuantity(),book.getAvailableQuantity());
+        this.jdbcTemplate.update("insert into books(ISBN,title,author,genre) values(?,?,?,?)",book.getISBN(),book.getTitle(),book.getAuthor(),book.getGenre());
     }
 
     @Override
-    public boolean isExist(String ISBN) {
-        Integer count = this.jdbcTemplate.queryForObject("select count(*) from books where ISBN=?",Integer.class,ISBN);
+    public boolean isExist(String id) {
+        String sql = "select exists(select 1 from books where ISBN = ?)";
+        Boolean exists = this.jdbcTemplate.queryForObject(sql, Boolean.class,id);
 
-        return count!=null && count>0;
+        return Boolean.TRUE.equals(exists);
     }
 
     @Override
-    public Book findByISBN(String ISBN) {
+    public Book findById(String id) {
         try{
-            return this.jdbcTemplate.queryForObject("select * from books where ISBN=?",bookMapper,ISBN);
+            return this.jdbcTemplate.queryForObject("select * from books where ISBN=?",bookMapper,id);
         }catch(EmptyResultDataAccessException e){
             return null;
         }
-    }
-
-    @Override
-    public void updateQuantity(Book book) {
-        this.jdbcTemplate.update("update books set totalQuantity=?, availableQuantity=? where ISBN=?"
-        ,book.getTotalQuantity(),book.getAvailableQuantity(),book.getISBN());
     }
 
     private List<Book> findByColumnName(String colName, String keyword, int limit, int offset){

@@ -1,3 +1,5 @@
+package domain;
+
 public class Page{
     private final int pageSize=4;
     private final int rangeSize=4;

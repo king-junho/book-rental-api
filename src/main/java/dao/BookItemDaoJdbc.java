@@ -1,11 +1,17 @@
+package dao;
+
+import domain.Book;
+import domain.BookItem;
+import domain.enums.BookStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-import javax.sql.DataSource;
-import java.util.List;
-
 public class BookItemDaoJdbc implements BookItemDao{
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+
+    public BookItemDaoJdbc(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     private RowMapper<BookItem> bookItemRowMapper = (rs, rowNum)->{
         BookItem bookItem = new BookItem(rs.getLong("id"), rs.getString("ISBN"));
@@ -15,18 +21,13 @@ public class BookItemDaoJdbc implements BookItemDao{
     };
 
     @Override
-    public void setDataSource(DataSource datasource) {
-        this.jdbcTemplate = new JdbcTemplate(datasource);
-    }
-
-    @Override
     public void add(Book book) {
         String sql = "insert into book_items(ISBN,status) values(?,?)";
-        int totalCount = book.getTotalQuantity();
+        //int totalCount = book.getTotalQuantity();
 
-        for(int i=0; i<totalCount; i++){
-            this.jdbcTemplate.update(sql,book.getISBN(),BookStatus.AVAILABLE.name());
-        }
+//        for(int i=0; i<totalCount; i++){
+//            this.jdbcTemplate.update(sql,book.getISBN(), BookStatus.AVAILABLE.name());
+//        }
     }
 
     @Override
@@ -36,8 +37,8 @@ public class BookItemDaoJdbc implements BookItemDao{
     }
 
     @Override
-    public int rent(String id) {
+    public int rent(Long id) {
         String sql = "update book_items set status=? where id=? and status = ?";
-        return this.jdbcTemplate.update(sql,BookStatus.RENTED.name(),id,BookStatus.AVAILABLE.name());
+        return this.jdbcTemplate.update(sql, BookStatus.RENTED.name(),id, BookStatus.AVAILABLE.name());
     }
 }
