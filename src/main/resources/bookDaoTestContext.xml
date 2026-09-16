@@ -3,12 +3,24 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="bookService" class="BookService">
-        <property name="bookDao" ref="bookDao"/>
-        <property name="bookItemDao" ref="bookItemDao"/>
+    <bean id="bookItemService" class="service.BookItemService">
+
     </bean>
 
-    <bean id="bookDao" class="BookDaoJdbc">
+    <bean id="bookService" class="service.BookService">
+        <constructor-arg ref="bookItemService"/>
+        <constructor-arg ref="bookDao"/>
+    </bean>
+
+    <bean id="bookDao" class="dao.BookDaoJdbc">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
+
+    <bean id="bookItemDao" class="dao.BookItemDaoJdbc">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
         <property name="dataSource" ref="dataSource"/>
     </bean>
 
@@ -19,9 +31,6 @@
         <property name="password" value="1994"/>
     </bean>
 
-    <bean id="bookItemDao" class="BookItemDaoJdbc">
-        <property name="dataSource" ref="dataSource"/>
-    </bean>
 
 
 
