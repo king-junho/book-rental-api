@@ -1,36 +1,35 @@
 package domain;
 
 import domain.enums.RentalStatus;
-
 import java.time.LocalDate;
 
 public class Rental {
-    private final String id;
+    private final Long id;
     private final String userId;
-    private final String bookId;
+    private final Long bookItemId;
     private final LocalDate rentedAt;
     private final LocalDate dueDate;
     private LocalDate returnedAt;
     private RentalStatus status;
 
-    public Rental(String id, String userId, String bookId, LocalDate rentedAt, RentalStatus status) {
+    public Rental(Long id, String userId, Long bookItemId, LocalDate rentedAt, RentalStatus status) {
         this.id = id;
         this.userId = userId;
-        this.bookId = bookId;
+        this.bookItemId = bookItemId;
         this.rentedAt = rentedAt;
         this.dueDate = rentedAt.plusDays(14);
         this.status = status;
     }
 
-    public String getId() {
+    public Long getId() {
         return this.id;
     }
 
     public String getUserId() {
         return this.userId;
     }
-    public String getBookId() {
-        return this.bookId;
+    public Long getBookItemId() {
+        return this.bookItemId;
     }
     public LocalDate getRentedAt() {
         return this.rentedAt;
@@ -46,9 +45,6 @@ public class Rental {
     }
     public RentalStatus getStatus() {
         return this.status;
-    }
-    public void setStatus(RentalStatus status) {
-        this.status = status;
     }
 }
 

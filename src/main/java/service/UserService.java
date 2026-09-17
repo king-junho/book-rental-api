@@ -2,6 +2,7 @@ package service;
 
 import dao.UserDao;
 import domain.User;
+import exception.EntityAlreadyExistsException;
 import exception.InvalidLoginInfoException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -20,7 +21,7 @@ public class UserService {
 
     public void signup(User user){
         if(userDao.isExist(user.getId())){
-            throw new UserAlreadyExistsException("이미 존재하는 아이디입니다.");
+            throw new EntityAlreadyExistsException("이미 존재하는 아이디입니다.");
         }
 
         String hashedPassword = encoder.encode(user.getPassword());

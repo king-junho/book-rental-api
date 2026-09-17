@@ -1,9 +1,7 @@
 package dao;
 
-import domain.Book;
 import domain.BookItem;
 import domain.enums.BookStatus;
-import exception.EntityAlreadyExistsException;
 import exception.EntityNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;

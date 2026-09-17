@@ -55,7 +55,7 @@ public class BookService {
             throw new EntityAlreadyExistsException("이미 등록된 도서입니다. ISBN : "+book.getISBN());
         }else{
             bookDao.add(book);
-            bookItemService.addBookItems(book,count);
+            //bookItemService.addBookItems(book,count);
         }
     }
 }
