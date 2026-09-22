@@ -24,9 +24,7 @@ public class RentalDaoJdbc implements RentalDao {
         LocalDate returnedAt = rs.getObject("returnedAt",LocalDate.class);
         RentalStatus status = RentalStatus.valueOf(rs.getString("status"));
 
-        Rental rental = new Rental(id,userId,bookItemId,rentedAt,status);
-        if(returnedAt!=null)
-            rental.setReturnedAt(returnedAt);
+        Rental rental = new Rental(id,userId,bookItemId,rentedAt,returnedAt, status);
 
         return rental;
     };

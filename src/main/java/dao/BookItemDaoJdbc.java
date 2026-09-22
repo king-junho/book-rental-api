@@ -1,7 +1,7 @@
 package dao;
 
 import domain.BookItem;
-import domain.enums.BookStatus;
+import domain.enums.BookItemStatus;
 import exception.EntityNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -22,10 +22,8 @@ public class BookItemDaoJdbc implements BookItemDao{
     private RowMapper<BookItem> bookItemMapper = (rs, rowNum)->{
         Long id = rs.getLong("id");
         String ISBN = rs.getString("ISBN");
-        BookItem bookItem = new BookItem(id,ISBN);
-
-        BookStatus status = BookStatus.valueOf(rs.getString("status"));  //status예외 처리는 어디서 해야돼? bookItem 도메인의 setStatus함수? 아니면 지금 여기?
-        bookItem.setStatus(status);
+        BookItemStatus status = BookItemStatus.valueOf(rs.getString("status"));
+        BookItem bookItem = new BookItem(id,ISBN,status);
 
         return bookItem;
     };
@@ -33,7 +31,7 @@ public class BookItemDaoJdbc implements BookItemDao{
     @Override
     public void add(String isbn) {
         String sql = "insert into book_items (ISBN, status) values (?, ?)";
-        jdbcTemplate.update(sql,isbn,BookStatus.AVAILABLE.name());
+        jdbcTemplate.update(sql,isbn,BookItemStatus.AVAILABLE.name());
     }
 
     @Override
@@ -43,7 +41,7 @@ public class BookItemDaoJdbc implements BookItemDao{
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setString(1,isbn);
-                ps.setString(2,BookStatus.AVAILABLE.name());
+                ps.setString(2,BookItemStatus.AVAILABLE.name());
             }
 
             @Override
@@ -85,7 +83,7 @@ public class BookItemDaoJdbc implements BookItemDao{
     }
 
     @Override
-    public void updateStatus(Long id, BookStatus status) {
+    public void updateStatus(Long id, BookItemStatus status) {
         String sql = "update book_items set status = ? where id = ?";
         jdbcTemplate.update(sql,status.name(),id);
     }

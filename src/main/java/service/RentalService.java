@@ -48,7 +48,7 @@ public class RentalService {
 
     //책 대여 정보 남기기
     public void recoredRentalHistory(Long bookItemId, String userId){
-        Rental rental = new Rental(null,userId,bookItemId, LocalDate.now(), RentalStatus.RENTED);
+        Rental rental = new Rental(null,userId,bookItemId);
         rentalDao.add(rental);
     }
 

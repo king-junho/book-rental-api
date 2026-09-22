@@ -50,7 +50,7 @@ public class RentalDaoTest {
         BookItem bookItem = bookItemDao.findByIsbn(bookId).get(0);
 
         //Rental 저장
-        Rental rental = new Rental(null, userId, bookItem.getId(), LocalDate.now(), RentalStatus.RENTED);
+        Rental rental = new Rental(null, userId, bookItem.getId());
         rentalDao.add(rental);
 
         //저장된 Rental을 다시 조회해서 'DB가 만들어준 진짜 ID'가 포함된 객체를 반환!

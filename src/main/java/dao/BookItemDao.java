@@ -1,7 +1,7 @@
 package dao;
 
 import domain.BookItem;
-import domain.enums.BookStatus;
+import domain.enums.BookItemStatus;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public interface BookItemDao {
     //책 ISBN 기준 다중 조회
     List<BookItem> findByIsbn(String isbn);
     //책 상태 변경(대여 가능 or 대여 중)
-    void updateStatus(Long id, BookStatus status);
+    void updateStatus(Long id, BookItemStatus status);
     int rent(Long id);
     int returnBook(Long id);
     int getAvailableBookCount(String isbn);

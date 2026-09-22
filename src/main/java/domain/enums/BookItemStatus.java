@@ -1,6 +1,6 @@
 package domain.enums;
 
-public enum BookStatus {
+public enum BookItemStatus {
     AVAILABLE,
     RENTED,
 }

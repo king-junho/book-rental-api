@@ -40,7 +40,7 @@ public class UserDaoJdbc implements UserDao {
 
     @Override
     public void add(User user, String hashedPassword) {
-        this.jdbcTemplate.update("insert into users(id,password,name) values(?,?,?)",user.getId(),hashedPassword,user.getName());
+        this.jdbcTemplate.update("insert into users(id,password,name) values(?,?,?)",user.getEmail(),hashedPassword,user.getName());
     }
 
     @Override
