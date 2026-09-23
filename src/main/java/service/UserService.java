@@ -19,28 +19,28 @@ public class UserService {
         userDao.deleteAll();
     }
 
-    public void signup(User user){
-        if(userDao.existsByEmail(user.getEmail())){
+    public void signup(String userEmail, String password, String name){
+        if(userDao.existsByEmail(userEmail)){
             throw new EntityAlreadyExistsException("이미 존재하는 아이디입니다.");
         }
 
-        String hashedPassword = encoder.encode(user.getEncodedPassword());
-        User addUser = new User(user.getEmail(),hashedPassword,user.getName());
+        String hashedPassword = encoder.encode(password);
+        User addUser = new User(userEmail,hashedPassword,name);
 
         userDao.add(addUser);
     }
 
-    public boolean login(String id, String password){
-        User loginUser = userDao.findByEmail(id);
+    public boolean login(String userEmail, String password){
+        User loginUser = userDao.findByEmail(userEmail);
 
-        if(loginUser != null && encoder.matches(password,loginUser.getEncodedPassword())){
+        if(encoder.matches(password,loginUser.getEncodedPassword())){
             return true;
         }
 
         throw new InvalidLoginInfoException("아이디나 비밀번호가 일치하지 않습니다.");
     }
 
-    public User getUser(String id){
-        return userDao.findByEmail(id);
+    public User getUser(String userEmail){
+        return userDao.findByEmail(userEmail);
     }
 }

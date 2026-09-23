@@ -6,6 +6,7 @@ import domain.PageResult;
 import domain.enums.SearchType;
 import exception.EntityAlreadyExistsException;
 import exception.EntityNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,12 +26,7 @@ public class BookService {
 
     //domain.Book ISBN으로 조회
     public Book findBookById(String id){
-        Book book = bookDao.findByIsbn(id);
-
-        if(book==null){
-            throw new EntityNotFoundException("해당 도서를 찾을 수 없습니다. ISBN : "+id);
-        }
-        return book;
+        return bookDao.findByIsbn(id);
     }
 
     public PageResult<Book> findBookBySearchType(SearchType type, String keyword, int currentPage){
@@ -42,7 +38,6 @@ public class BookService {
     }
 
     public void removeBookById(String id){
-        //book_items들도 다 사라져야 함 (db 자동 삭제) -> 테스트 필요
         if(!bookDao.existsByIsbn(id)){
             throw new EntityNotFoundException("삭제하려는 도서가 존재하지 않습니다. ISBN : "+id);
         }else{
@@ -50,12 +45,16 @@ public class BookService {
         }
     }
 
+    @Transactional
     public void addBook(Book book, int count){
+        if(count<0){
+            throw new IllegalArgumentException("책의 수량은 음수값을 가질 수 없습니다.");
+        }
         if(bookDao.existsByIsbn(book.getIsbn())){
             throw new EntityAlreadyExistsException("이미 등록된 도서입니다. ISBN : "+book.getIsbn());
         }else{
             bookDao.add(book);
-            //bookItemService.addBookItems(book,count);
+            bookItemService.addBookItem(book.getIsbn(),count);
         }
     }
 }
