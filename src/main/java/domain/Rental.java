@@ -11,8 +11,8 @@ public class Rental {
     private final LocalDate rentedAt;
     private final LocalDate dueDate;
 
-    private LocalDate returnedAt;
-    private RentalStatus status;
+    private final LocalDate returnedAt;
+    private final RentalStatus status;
 
     private Rental(Long id, String userEmail, Long bookItemId, LocalDate rentedAt, LocalDate dueDate, LocalDate returnedAt, RentalStatus status) {
         validate(userEmail,bookItemId,rentedAt,dueDate,returnedAt,status);
@@ -89,23 +89,6 @@ public class Rental {
     }
     public RentalStatus getStatus() {
         return this.status;
-    }
-
-    public void returnRental(){
-        if(status==RentalStatus.RETURNED){
-            throw new IllegalStateException("이미 반납된 대여입니다.");
-        }
-        this.returnedAt = LocalDate.now();
-        this.status = RentalStatus.RETURNED;
-    }
-
-    public void markOverdue(){
-        if(status==RentalStatus.RETURNED){
-            return;
-        }
-        if(dueDate.isBefore(LocalDate.now())){
-            this.status = RentalStatus.OVERDUE;
-        }
     }
 }
 

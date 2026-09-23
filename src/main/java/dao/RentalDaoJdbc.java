@@ -16,31 +16,32 @@ public class RentalDaoJdbc implements RentalDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private RowMapper<Rental> rentalMapper = (rs, rowNum)->{
+    private final RowMapper<Rental> rentalMapper = (rs, rowNum)->{
         Long id = rs.getLong("id");
-        String userId = rs.getString("userId");
-        Long bookItemId = rs.getLong("bookItemId");
-        LocalDate rentedAt = rs.getObject("rentedAt",LocalDate.class);
-        LocalDate returnedAt = rs.getObject("returnedAt",LocalDate.class);
+        String userEmail = rs.getString("user_email");
+        Long bookItemId = rs.getLong("book_item_id");
+        LocalDate rentedAt = rs.getObject("rented_at",LocalDate.class);
+        LocalDate dueDate = rs.getObject("due_date", LocalDate.class);
+        LocalDate returnedAt = rs.getObject("returned_at",LocalDate.class);
         RentalStatus status = RentalStatus.valueOf(rs.getString("status"));
 
-        Rental rental = new Rental(id,userId,bookItemId,rentedAt,returnedAt, status);
+        Rental rental = Rental.restore(id,userEmail,bookItemId,rentedAt,dueDate,returnedAt,status);
 
         return rental;
     };
 
     @Override
     public void add(Rental rental) {
-        String sql = "insert into rentals(userId, bookItemId, rentedAt, dueDate, returnedAt,status) values(?,?,?,?,?,?)";
+        String sql = "insert into rentals(user_email, book_item_id, rented_at, due_date, returned_at,status) values(?,?,?,?,?,?)";
 
-        String userId = rental.getUserId();
+        String userEmail = rental.getUserEmail();
         Long bookItemId = rental.getBookItemId();
         LocalDate rentedAt = rental.getRentedAt();
         LocalDate dueDate = rental.getDueDate();
         LocalDate returnedAt = rental.getReturnedAt();
         RentalStatus status = rental.getStatus();
 
-        jdbcTemplate.update(sql,userId,bookItemId,rentedAt,dueDate,returnedAt,status.name());
+        jdbcTemplate.update(sql,userEmail,bookItemId,rentedAt,dueDate,returnedAt,status.name());
     }
 
     @Override
@@ -51,21 +52,23 @@ public class RentalDaoJdbc implements RentalDao {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public int deleteById(Long id) {
         String sql = "delete from rentals where id = ?";
-        jdbcTemplate.update(sql,id);
+        return jdbcTemplate.update(sql,id);
     }
 
     @Override
     public List<Rental> findAll() {
-        String sql = "select * from rentals";
+        String sql = "select id, user_email, book_item_id, rented_at, due_date,returned_at,status from rentals";
+
         return jdbcTemplate.query(sql,rentalMapper);
     }
 
     @Override
     public Rental findById(Long id) {
         try {
-            String sql = "select * from rentals where id = ?";
+            String sql = "select id, user_email, book_item_id, rented_at, due_date,returned_at,status from rentals where id = ?";
+
             return jdbcTemplate.queryForObject(sql,rentalMapper,id);
         }catch(EmptyResultDataAccessException e){
             throw new EntityNotFoundException("대여 정보를 찾을 수 없습니다.");
@@ -73,21 +76,21 @@ public class RentalDaoJdbc implements RentalDao {
     }
 
     @Override
-    public List<Rental> findByUserId(String userId) {
-        String sql = "select * from rentals where userId = ?";
-        return jdbcTemplate.query(sql,rentalMapper,userId);
+    public List<Rental> findByUserEmail(String userEmail) {
+        String sql = "select id, user_email, book_item_id, rented_at, due_date,returned_at,status from rentals where user_email = ?";
+        return jdbcTemplate.query(sql,rentalMapper,userEmail);
     }
 
     @Override
     public List<Rental> findByBookItemId(Long bookItemId) {
-        String sql = "select * from rentals where bookItemId = ?";
+        String sql = "select id, user_email, book_item_id, rented_at, due_date,returned_at,status from rentals where book_item_id = ?";
         return jdbcTemplate.query(sql,rentalMapper,bookItemId);
     }
 
     @Override
     public Rental findActiveRentalByBookItemId(Long bookItemId) {
         try{
-            String sql = "select * from rentals where bookItemId = ? and status = 'RENTED'";
+            String sql = "select id, user_email, book_item_id, rented_at, due_date,returned_at,status from rentals where book_item_id = ? and (status = 'RENTED' or status ='OVERDUE')";
             return jdbcTemplate.queryForObject(sql,rentalMapper,bookItemId);
         }catch(EmptyResultDataAccessException e){
             throw new EntityNotFoundException("대여 중인 도서의 대여 정보를 찾을 수 없습니다.");
@@ -95,28 +98,30 @@ public class RentalDaoJdbc implements RentalDao {
     }
 
     @Override
-    public List<Rental> findRentedBookByUserId(String userId) {
-        String sql = "select * from rentals where userId = ? and status ='RENTED'";
-        return jdbcTemplate.query(sql,rentalMapper,userId);
+    public List<Rental> findActiveRentalsByUserEmail(String userEmail) {
+        String sql = "select id, user_email, book_item_id, rented_at, due_date,returned_at,status from rentals where user_email = ? and (status ='RENTED' or status='OVERDUE')";
+        return jdbcTemplate.query(sql,rentalMapper,userEmail);
     }
 
     @Override
-    public void updateReturnedDate(Long id, LocalDate returnedDate) {
-        String sql = "update rentals set returnedAt = ? , status = 'RETURNED' where id = ?";
-        jdbcTemplate.update(sql,returnedDate,id);
-    }
+    public int updateReturnedDate(Long id, LocalDate returnedDate) {
+        String sql = "update rentals set returned_at = ? , status = 'RETURNED' where id = ? and (status = 'RENTED' or status='OVERDUE')";
 
-    @Override
-    public void updateStatus(Long id, RentalStatus status) {
-        String sql ="update rentals set status = ? where id =?";
-        jdbcTemplate.update(sql,status.name(),id);
+        return jdbcTemplate.update(sql,returnedDate,id);
     }
 
     @Override
     public int getCount() {
-        String sql = "select count(*) from rentals";
+            String sql = "select count(*) from rentals";
         Integer count = jdbcTemplate.queryForObject(sql,Integer.class);
 
         return count!=null?count:0;
+    }
+
+    @Override
+    public int updateOverdue(LocalDate today){
+        String sql = "update rentals set status = 'OVERDUE' where status = 'RENTED' and due_date < ?";
+
+        return jdbcTemplate.update(sql,today);
     }
 }

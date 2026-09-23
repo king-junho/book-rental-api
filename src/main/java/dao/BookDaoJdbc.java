@@ -15,15 +15,13 @@ public class BookDaoJdbc implements BookDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private RowMapper<Book> bookMapper = (rs, rowNum)->{
-        String ISBN = rs.getString("ISBN");
+    private final RowMapper<Book> bookMapper = (rs, rowNum)->{
+        String isbn = rs.getString("isbn");
         String title = rs.getString("title");
         String author = rs.getString("author");
         String genre = rs.getString("genre");
 
-        Book book = new Book(ISBN,title,author,genre);
-
-        return book;
+        return new Book(isbn,title,author,genre);
     };
     @Override
     public void deleteAll() {
@@ -31,29 +29,29 @@ public class BookDaoJdbc implements BookDao {
     }
 
     @Override
-    public void deleteById(String ISBN) {
-        this.jdbcTemplate.update("delete from books where ISBN = ?",ISBN);
+    public void deleteByIsbn(String isbn) {
+        this.jdbcTemplate.update("delete from books where isbn = ?",isbn);
     }
 
     @Override
     public void add(Book book) {
-        this.jdbcTemplate.update("insert into books(ISBN,title,author,genre) values(?,?,?,?)",book.getISBN(),book.getTitle(),book.getAuthor(),book.getGenre());
+        this.jdbcTemplate.update("insert into books(isbn,title,author,genre) values(?,?,?,?)",book.getIsbn(),book.getTitle(),book.getAuthor(),book.getGenre());
     }
 
     @Override
-    public boolean isExist(String id) {
-        String sql = "select exists(select 1 from books where ISBN = ?)";
-        Boolean exists = this.jdbcTemplate.queryForObject(sql, Boolean.class,id);
+    public boolean existsByIsbn(String isbn) {
+        String sql = "select exists(select 1 from books where isbn = ?)";
+        Boolean exists = this.jdbcTemplate.queryForObject(sql, Boolean.class,isbn);
 
         return Boolean.TRUE.equals(exists);
     }
 
     @Override
-    public Book findById(String id) {
+    public Book findByIsbn(String isbn){
         try{
-            return this.jdbcTemplate.queryForObject("select * from books where ISBN=?",bookMapper,id);
+            return this.jdbcTemplate.queryForObject("select isbn,title,author,genre from books where isbn=?",bookMapper,isbn);
         }catch(EmptyResultDataAccessException e){
-            throw new EntityNotFoundException("해당 책을 찾을 수 없습니다. ISBN : "+id);
+            throw new EntityNotFoundException("해당 책을 찾을 수 없습니다. Isbn : "+isbn);
         }
     }
 
@@ -70,7 +68,7 @@ public class BookDaoJdbc implements BookDao {
     public List<Book> findBySearchType(SearchType type, String keyword, int limit, int offset) {
         String searchKeyword = "%"+keyword+"%";
         String colName = getColumnName(type);
-        String sql = "select * from books where "+colName+" like ? limit ? offset ?";
+        String sql = "select isbn,title,author,genre from books where "+colName+" like ? order by isbn limit ? offset ?";
 
         return this.jdbcTemplate.query(sql,bookMapper,searchKeyword,limit,offset);
     }

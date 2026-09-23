@@ -13,14 +13,13 @@ public class UserDaoJdbc implements UserDao {
     public UserDaoJdbc(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-    private RowMapper<User> userMapper = (rs, rowNum) ->{
-        String id = rs.getString("id");
-        String password = rs.getString("password");
+
+    private final RowMapper<User> userMapper = (rs, rowNum) ->{
+        String email = rs.getString("email");
+        String password = rs.getString("encoded_password");
         String name = rs.getString("name");
 
-        User user = new User(id,password,name);
-
-        return user;
+        return new User(email,password,name);
     };
 
     @Override
@@ -29,24 +28,24 @@ public class UserDaoJdbc implements UserDao {
     }
 
     @Override
-    public User findById(String id) {
+    public User findByEmail(String email) {
         try{
-            return this.jdbcTemplate.queryForObject("select * from users where id = ?",userMapper,id);
+            return this.jdbcTemplate.queryForObject("select email,encoded_password,name from users where email = ?",userMapper,email);
         }catch(EmptyResultDataAccessException e){
-            throw new EntityNotFoundException("해당 유저를 찾을 수 없습니다. id : "+id);
+            throw new EntityNotFoundException("해당 유저를 찾을 수 없습니다. email : "+email);
         }
 
     }
 
     @Override
-    public void add(User user, String hashedPassword) {
-        this.jdbcTemplate.update("insert into users(id,password,name) values(?,?,?)",user.getEmail(),hashedPassword,user.getName());
+    public void add(User user) {
+        this.jdbcTemplate.update("insert into users(email,encoded_password,name) values(?,?,?)",user.getEmail(),user.getEncodedPassword(),user.getName());
     }
 
     @Override
-    public boolean isExist(String id) {
-        String sql = "select exists(select 1 from users where id = ?)";
-        Boolean exists = this.jdbcTemplate.queryForObject(sql, Boolean.class,id);
+    public boolean existsByEmail(String email) {
+        String sql = "select exists(select 1 from users where email = ?)";
+        Boolean exists = this.jdbcTemplate.queryForObject(sql, Boolean.class,email);
 
         return Boolean.TRUE.equals(exists);
     }

@@ -14,10 +14,6 @@ public class BookItem {
         this.status=status;
     }
 
-    public static BookItem create(String isbn) {
-        return new BookItem(null, isbn, BookItemStatus.AVAILABLE);
-    }
-
     public static BookItem restore(Long id, String isbn, BookItemStatus status) {
         if(id==null)
             throw new IllegalArgumentException("id는 Null일 수 없습니다.");
@@ -39,21 +35,5 @@ public class BookItem {
     }
     public BookItemStatus getStatus(){
         return this.status;
-    }
-
-    public void returnBookItem(){
-        if(status == BookItemStatus.RENTED){
-            status = BookItemStatus.AVAILABLE;
-        }else{
-            throw new IllegalStateException("대여 중인 책만 반납할 수 있습니다.");
-        }
-    }
-
-    public void rentBookItem(){
-        if(status == BookItemStatus.AVAILABLE){
-            status = BookItemStatus.RENTED;
-        }else{
-            throw new IllegalStateException("대여 중인 책은 대여할 수 없습니다.");
-        }
     }
 }

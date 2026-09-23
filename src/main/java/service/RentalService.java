@@ -32,8 +32,8 @@ public class RentalService {
     }
 
     //유저가 대여했던 정보 전체 조회
-    public List<Rental> retrieveUserRentalHistory(String userId){
-        return rentalDao.findByUserId(userId);
+    public List<Rental> retrieveUserRentalHistory(String userEmail){
+        return rentalDao.findByUserEmail(userEmail);
     }
 
     //한 도서의 대여 정보 전체 조회
@@ -42,13 +42,13 @@ public class RentalService {
     }
 
     //유저가 대여 중인(반납해야 할) 정보 조회
-    public List<Rental> retrieveUserRentedBooks(String userId){
-        return rentalDao.findRentedBookByUserId(userId);
+    public List<Rental> retrieveUserRentedBooks(String userEmail){
+        return rentalDao.findActiveRentalsByUserEmail(userEmail);
     }
 
     //책 대여 정보 남기기
-    public void recoredRentalHistory(Long bookItemId, String userId){
-        Rental rental = new Rental(null,userId,bookItemId);
+    public void recoredRentalHistory(Long bookItemId, String userEmail){
+        Rental rental = Rental.create(userEmail,bookItemId);
         rentalDao.add(rental);
     }
 
@@ -60,6 +60,6 @@ public class RentalService {
 
     public void recoredOverdueHistory(Long bookItemId){
         Rental rental = rentalDao.findActiveRentalByBookItemId(bookItemId);
-        rentalDao.updateStatus(rental.getId(),RentalStatus.OVERDUE);
+        rentalDao.updateOverdue(LocalDate.now());
     }
 }

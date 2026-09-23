@@ -11,7 +11,7 @@ public class UserTest {
     public void correctIdFormatSignin(){
         User user = new User("test@hansung.ac.kr","1234","test");
 
-        assertThat(user.getId()).isEqualTo("test@hansung.ac.kr");
+        assertThat(user.getEmail()).isEqualTo("test@hansung.ac.kr");
     }
 
     @Test

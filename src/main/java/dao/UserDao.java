@@ -4,7 +4,7 @@ import domain.User;
 
 public interface UserDao{
     void deleteAll();
-    User findById(String id);
-    void add(User user, String hashedPassword);
-    boolean isExist(String id);
+    User findByEmail(String email);
+    void add(User user);
+    boolean existsByEmail(String email);
 }

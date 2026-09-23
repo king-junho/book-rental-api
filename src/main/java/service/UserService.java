@@ -20,18 +20,20 @@ public class UserService {
     }
 
     public void signup(User user){
-        if(userDao.isExist(user.getId())){
+        if(userDao.existsByEmail(user.getEmail())){
             throw new EntityAlreadyExistsException("이미 존재하는 아이디입니다.");
         }
 
-        String hashedPassword = encoder.encode(user.getPassword());
-        userDao.add(user,hashedPassword);
+        String hashedPassword = encoder.encode(user.getEncodedPassword());
+        User addUser = new User(user.getEmail(),hashedPassword,user.getName());
+
+        userDao.add(addUser);
     }
 
     public boolean login(String id, String password){
-        User loginUser = userDao.findById(id);
+        User loginUser = userDao.findByEmail(id);
 
-        if(loginUser != null && encoder.matches(password,loginUser.getPassword())){
+        if(loginUser != null && encoder.matches(password,loginUser.getEncodedPassword())){
             return true;
         }
 
@@ -39,6 +41,6 @@ public class UserService {
     }
 
     public User getUser(String id){
-        return userDao.findById(id);
+        return userDao.findByEmail(id);
     }
 }

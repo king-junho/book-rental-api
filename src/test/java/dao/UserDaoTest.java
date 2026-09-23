@@ -1,6 +1,7 @@
 package dao;
 
 import domain.User;
+import exception.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,36 +9,50 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration("/userDaoTestContext.xml")
 public class UserDaoTest {
 
     @Autowired private UserDao userDao;
+    @Autowired private TestDataCleaner testDataCleaner;
 
     @BeforeEach
     public void setUp() {
-        userDao.deleteAll();
+        testDataCleaner.cleanUp();
     }
 
-    @Test
-    public void addUserAndFindUser(){
-        User user = new User("test@test.com","1234","test");
-        userDao.add(user,user.getPassword());
+    private User setData(){
+        User user = new User("test@test.com","hashed_password","test");
+        userDao.add(user);
 
-        User findUser = userDao.findById(user.getId());
-        assertThat(findUser.getId()).isEqualTo(user.getId());
-        assertThat(findUser.getPassword()).isEqualTo(user.getPassword()); //hashed처리는 서비스 계층에서 처리
+        return user;
+    }
+    @Test
+    public void add_UserAndFindUser(){
+        User user = setData();
+
+        User findUser = userDao.findByEmail(user.getEmail());
+        assertThat(findUser.getEmail()).isEqualTo(user.getEmail());
+        assertThat(findUser.getEncodedPassword()).isEqualTo(user.getEncodedPassword());
         assertThat(user.getName()).isEqualTo(findUser.getName());
     }
 
     @Test
-    public void deleteAllUsersAndExistsUser(){
-        User user = new User("test@test.com","1234","test");
-        userDao.add(user, user.getPassword());
-        assertThat(userDao.isExist(user.getId())).isTrue();
+    public void find_ByEmail_ThrowsException_WhenUserDoesNotExist(){
+        assertThatThrownBy(()->userDao.findByEmail("unknown")).isInstanceOf(EntityNotFoundException.class);
+    }
 
-        userDao.deleteAll();
-        assertThat(userDao.isExist(user.getId())).isFalse();
+    @Test
+    public void exists_ByEmail_ReturnsTrue_WhenUserExists(){
+        User user = setData();
+
+        assertThat(userDao.existsByEmail(user.getEmail())).isTrue();
+    }
+
+    @Test
+    public void exists_ByEmail_ReturnsFalse_WhenUserDoesNotExist(){
+        assertThat(userDao.existsByEmail("unknown")).isFalse();
     }
 }

@@ -26,36 +26,36 @@ public class UserServiceUnitTest {
     @Test
     public void signupTest(){
         User user = new User("test@naver.com","1234","test");
-        when(userDao.isExist(user.getId())).thenReturn(false);
-        when(encoder.encode(user.getPassword())).thenReturn("hashed_1234");
+        when(userDao.existsByEmail(user.getEmail())).thenReturn(false);
+        when(encoder.encode(user.getEncodedPassword())).thenReturn("hashed_1234");
 
         userService.signup(user);
 
-        verify(userDao,times(1)).add(user,"hashed_1234");
+        verify(userDao,times(1)).add(user);
     }
 
     @Test
     public void loginTest(){
         User user = new User("test@naver.com","1234","test");
 
-        when(userDao.findById(user.getId())).thenReturn(user);
-        when(encoder.matches(user.getPassword(),userDao.findById(user.getId()).getPassword())).thenReturn(true);
-        assertThat(userService.login(user.getId(),user.getPassword())).isTrue();
+        when(userDao.findByEmail(user.getEmail())).thenReturn(user);
+        when(encoder.matches(user.getEncodedPassword(),userDao.findByEmail(user.getEmail()).getEncodedPassword())).thenReturn(true);
+        assertThat(userService.login(user.getEmail(),user.getEncodedPassword())).isTrue();
     }
 
     @Test
     public void loginFail_UserNotFound(){
         User user = new User("test@naver.com","1234","test");
 
-        when(userDao.findById(user.getId())).thenReturn(null);
-        assertThatThrownBy(()->userService.login(user.getId(),user.getPassword())).isInstanceOf(InvalidLoginInfoException.class);
+        when(userDao.findByEmail(user.getEmail())).thenReturn(null);
+        assertThatThrownBy(()->userService.login(user.getEmail(),user.getEncodedPassword())).isInstanceOf(InvalidLoginInfoException.class);
     }
 
     @Test
     public void loginFail_PasswordMismatch(){
         User user = new User("test@naver.com","1234","test");
-        when(userDao.findById(user.getId())).thenReturn(user);
+        when(userDao.findByEmail(user.getEmail())).thenReturn(user);
         when(encoder.matches("1234","hashed_1234")).thenReturn(false);
-        assertThatThrownBy(()->userService.login(user.getId(),user.getPassword())).isInstanceOf(InvalidLoginInfoException.class);
+        assertThatThrownBy(()->userService.login(user.getEmail(),user.getEncodedPassword())).isInstanceOf(InvalidLoginInfoException.class);
     }
 }

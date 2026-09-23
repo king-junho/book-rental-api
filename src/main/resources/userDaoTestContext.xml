@@ -3,6 +3,9 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
+    <bean id="testDataSetUp" class="dao.TestDataCleaner">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
     <bean id="userDao" class="dao.UserDaoJdbc">
         <constructor-arg ref="jdbcTemplate"/>
     </bean>

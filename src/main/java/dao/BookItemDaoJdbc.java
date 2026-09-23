@@ -19,29 +19,27 @@ public class BookItemDaoJdbc implements BookItemDao{
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private RowMapper<BookItem> bookItemMapper = (rs, rowNum)->{
+    private final RowMapper<BookItem> bookItemMapper = (rs, rowNum)->{
         Long id = rs.getLong("id");
-        String ISBN = rs.getString("ISBN");
+        String isbn = rs.getString("isbn");
         BookItemStatus status = BookItemStatus.valueOf(rs.getString("status"));
-        BookItem bookItem = new BookItem(id,ISBN,status);
 
-        return bookItem;
+        return BookItem.restore(id,isbn,status);
     };
 
     @Override
     public void add(String isbn) {
-        String sql = "insert into book_items (ISBN, status) values (?, ?)";
-        jdbcTemplate.update(sql,isbn,BookItemStatus.AVAILABLE.name());
+        String sql = "insert into book_items (isbn) values (?)";
+        jdbcTemplate.update(sql,isbn);
     }
 
     @Override
     public void addBatch(String isbn, int count) {
-        String sql = "insert into book_items (ISBN, status) values (?, ?)";
+        String sql = "insert into book_items (isbn) values (?)";
         jdbcTemplate.batchUpdate(sql,new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setString(1,isbn);
-                ps.setString(2,BookItemStatus.AVAILABLE.name());
             }
 
             @Override
@@ -66,7 +64,7 @@ public class BookItemDaoJdbc implements BookItemDao{
     @Override
     public BookItem findById(Long id) {
         try{
-            String sql = "select * from book_items where id = ?";
+            String sql = "select id,isbn,status from book_items where id = ?";
             BookItem bookItem = jdbcTemplate.queryForObject(sql,bookItemMapper,id);
 
             return bookItem;
@@ -77,15 +75,9 @@ public class BookItemDaoJdbc implements BookItemDao{
 
     @Override
     public List<BookItem> findByIsbn(String isbn) {
-        String sql = "select * from book_items where ISBN = ?";
+        String sql = "select id,isbn,status from book_items where isbn = ?";
 
         return jdbcTemplate.query(sql,bookItemMapper,isbn);
-    }
-
-    @Override
-    public void updateStatus(Long id, BookItemStatus status) {
-        String sql = "update book_items set status = ? where id = ?";
-        jdbcTemplate.update(sql,status.name(),id);
     }
 
     @Override
@@ -102,7 +94,7 @@ public class BookItemDaoJdbc implements BookItemDao{
 
     @Override
     public int getAvailableBookCount(String isbn) {
-        String sql = "select count(*) from book_items where ISBN = ? and status = 'AVAILABLE'";
+        String sql = "select count(*) from book_items where isbn = ? and status = 'AVAILABLE'";
         Integer count = jdbcTemplate.queryForObject(sql,Integer.class,isbn);
 
         return count!=null?count:0;
@@ -110,7 +102,7 @@ public class BookItemDaoJdbc implements BookItemDao{
 
     @Override
     public List<BookItem> findAvailableBooks(String isbn) {
-        String sql = "select * from book_items where ISBN = ? and status = 'AVAILABLE'";
+        String sql = "select id,isbn,status from book_items where isbn = ? and status = 'AVAILABLE'";
         return jdbcTemplate.query(sql,bookItemMapper,isbn);
     }
 }
