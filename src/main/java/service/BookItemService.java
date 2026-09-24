@@ -2,13 +2,6 @@ package service;
 
 import dao.BookItemDao;
 import domain.BookItem;
-import domain.Page;
-import domain.PageResult;
-import exception.BookAlreadyRentedException;
-import exception.BookAlreadyReturnedException;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 public class BookItemService {
     private final BookItemDao bookItemDao;
@@ -19,13 +12,6 @@ public class BookItemService {
 
     public BookItem getBookItemById(Long id) {
         return bookItemDao.findById(id);
-    }
-
-    public PageResult<BookItem> getBookItemByISBN(String ISBN, int currentPage){
-        List<BookItem> data = bookItemDao.findByIsbn(ISBN);
-        Page pageInfo = new Page(data.size(),currentPage);
-
-        return new PageResult<>(pageInfo,data);
     }
 
     public void addBookItem(String isbn, int count){
@@ -47,4 +33,11 @@ public class BookItemService {
         bookItemDao.deleteById(id);
     }
 
+    public int getBookCount(String isbn){
+        return bookItemDao.getBookCount(isbn);
+    }
+
+    public int getAvailableBookCount(String isbn){
+        return bookItemDao.getAvailableBookCount(isbn);
+    }
 }

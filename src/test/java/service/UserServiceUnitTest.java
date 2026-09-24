@@ -133,7 +133,6 @@ public class UserServiceUnitTest {
     public void getUser_ExistingEmail_ReturnUser(){
         //given
         String userEmail = "test@naver.com";
-        String rawPassword = "1234";
         String encodedPassword ="hashed_1234";
         String name="test";
         User user = new User(userEmail,encodedPassword,name);

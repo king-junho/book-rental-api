@@ -101,6 +101,14 @@ public class BookItemDaoJdbc implements BookItemDao{
     }
 
     @Override
+    public int getBookCount(String isbn){
+        String sql = "select count(*) from book_items where isbn = ?";
+        Integer count = jdbcTemplate.queryForObject(sql,Integer.class,isbn);
+
+        return count!=null?count:0;
+    }
+
+    @Override
     public List<BookItem> findAvailableBooks(String isbn) {
         String sql = "select id,isbn,status from book_items where isbn = ? and status = 'AVAILABLE'";
         return jdbcTemplate.query(sql,bookItemMapper,isbn);

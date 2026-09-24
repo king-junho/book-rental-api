@@ -21,6 +21,9 @@ public interface BookItemDao {
     List<BookItem> findByIsbn(String isbn);
     int rent(Long id);
     int returnBook(Long id);
+    //대여 가능한 권수
     int getAvailableBookCount(String isbn);
+    //전체 보유 권수
+    int getBookCount(String isbn);
     List<BookItem> findAvailableBooks(String isbn);
 }

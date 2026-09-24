@@ -1,4 +1,4 @@
-package domain;
+package service.model;
 
 public class Page{
     private final int pageSize=4;
@@ -34,14 +34,14 @@ public class Page{
 
         setStartIndex(currentPage);
     }
-    public void setPageCount(int listCount){
+    private void setPageCount(int listCount){
         this.pageCount = (int)Math.ceil((double)listCount/pageSize);
     }
-    public void setRangeCount(int pageCount){
+    private void setRangeCount(int pageCount){
         this.rangeCount = (int)Math.ceil((double)pageCount/rangeSize);
     }
 
-    public void setRangeSetting(int currentPage){
+    private void setRangeSetting(int currentPage){
         this.currentRange = (currentPage-1)/rangeSize+1;
 
         this.startPage = (currentRange-1)*rangeSize+1;
@@ -55,7 +55,7 @@ public class Page{
         this.nextPage = currentPage+1 >pageCount ? pageCount : currentPage + 1;
     }
 
-    public void setStartIndex(int currentPage){
+    private void setStartIndex(int currentPage){
         this.startIndex = (currentPage-1)*pageSize;
     }
 

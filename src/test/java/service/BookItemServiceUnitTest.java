@@ -2,18 +2,14 @@ package service;
 
 import dao.BookItemDao;
 import domain.BookItem;
-import domain.Page;
-import domain.PageResult;
-import domain.enums.BookItemStatus;
-import exception.BookAlreadyRentedException;
-import exception.BookAlreadyReturnedException;
 import exception.EntityNotFoundException;
+import service.model.Page;
+import domain.enums.BookItemStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.EmptyResultDataAccessException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +19,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class BookItemServiceUnitTest {
     @Mock private BookItemDao bookItemDao;
-    @Mock private RentalService rentalService;
 
     @InjectMocks
     private BookItemService bookItemService;
@@ -49,42 +44,10 @@ public class BookItemServiceUnitTest {
     public void getBookItemById_NonExistentBookItem_ThrowEntityNotFoundException(){
         //give
         Long id = 1L;
-        when(bookItemDao.findById(id)).thenThrow(EmptyResultDataAccessException.class);
+        when(bookItemDao.findById(id)).thenThrow(EntityNotFoundException.class);
 
         //when && then
-        assertThatThrownBy(()->bookItemService.getBookItemById(id)).isInstanceOf(EmptyResultDataAccessException.class);
-    }
-
-    @Test
-    public void getBookItemByISBN_ExistingBookItems_ReturnPageResult(){
-        //given
-        int searchCount = 1;
-        int currentPage = 1;
-        Page expectedPage = new Page(searchCount,currentPage);
-
-        Long id = 1L;
-        String isbn = "isbn";
-        BookItemStatus status = BookItemStatus.RENTED;
-        BookItem bookItem = BookItem.restore(id,isbn,status);
-
-        when(bookItemDao.findByIsbn(isbn)).thenReturn(List.of(bookItem));
-
-        //when
-        PageResult<BookItem> findBookItems = bookItemService.getBookItemByISBN(isbn,currentPage);
-        assertThat(findBookItems.getData()).containsExactly(bookItem);
-        //assertThat(findBookItems.getPageInfo()).isSameAs(expectedPage);
-    }
-
-    @Test
-    public void getBookItemByISBN_NonExistentBookItems_ReturnEmptyPageResult(){
-        //given
-        when(bookItemDao.findByIsbn("unknown")).thenReturn(List.of());
-
-        //when
-        PageResult<BookItem> findBookItems = bookItemService.getBookItemByISBN("unknown",1);
-
-        //then
-        assertThat(findBookItems.getData()).isEmpty();
+        assertThatThrownBy(()->bookItemService.getBookItemById(id)).isInstanceOf(EntityNotFoundException.class);
     }
 
 
@@ -154,6 +117,36 @@ public class BookItemServiceUnitTest {
 
         //then
         verify(bookItemDao).deleteById(id);
+    }
+
+    @Test
+    public void getBookCount_ExistingBook_ReturnTotalCount(){
+        // given
+        String isbn = "isbn";
+
+        when(bookItemDao.getBookCount(isbn)).thenReturn(5);
+
+        // when
+        int count = bookItemService.getBookCount(isbn);
+
+        // then
+        assertThat(count).isEqualTo(5);
+        verify(bookItemDao).getBookCount(isbn);
+    }
+
+    @Test
+    public void getAvailableBookCount_ExistingBook_ReturnAvailableCount(){
+        // given
+        String isbn = "isbn";
+
+        when(bookItemDao.getAvailableBookCount(isbn)).thenReturn(3);
+
+        // when
+        int count = bookItemService.getAvailableBookCount(isbn);
+
+        // then
+        assertThat(count).isEqualTo(3);
+        verify(bookItemDao).getAvailableBookCount(isbn);
     }
 
 }

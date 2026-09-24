@@ -1,12 +1,13 @@
 package service;
 import dao.BookDao;
 import domain.Book;
-import domain.Page;
-import domain.PageResult;
+import service.model.Page;
 import domain.enums.SearchType;
 import exception.EntityAlreadyExistsException;
 import exception.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import service.model.BookDetail;
+import service.model.BookSearchResult;
 
 import java.util.List;
 
@@ -29,12 +30,18 @@ public class BookService {
         return bookDao.findByIsbn(id);
     }
 
-    public PageResult<Book> findBookBySearchType(SearchType type, String keyword, int currentPage){
+    public BookSearchResult findBookBySearchType(SearchType type, String keyword, int currentPage){
         int searchCount = bookDao.getCountBySearchType(type, keyword);
         Page pageInfo = new Page(searchCount,currentPage);
         List<Book> books = bookDao.findBySearchType(type,keyword, pageInfo.getPageSize(),pageInfo.getStartIndex());
 
-        return new PageResult<>(pageInfo,books);
+        List<BookDetail> bookDetails = books.stream().map(book-> new BookDetail(
+                book,
+                bookItemService.getBookCount(book.getIsbn()),
+                bookItemService.getAvailableBookCount(book.getIsbn())
+        )).toList();
+
+        return new BookSearchResult(pageInfo, bookDetails);
     }
 
     public void removeBookById(String id){
@@ -56,6 +63,14 @@ public class BookService {
             bookDao.add(book);
             bookItemService.addBookItem(book.getIsbn(),count);
         }
+    }
+    public BookDetail findBookDetail(String isbn){
+        Book book = bookDao.findByIsbn(isbn);
+
+        int totalCount = bookItemService.getBookCount(book.getIsbn());
+        int availableCount = bookItemService.getAvailableBookCount(book.getIsbn());
+
+        return new BookDetail(book,totalCount,availableCount);
     }
 }
 
