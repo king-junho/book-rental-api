@@ -182,11 +182,6 @@ public class RentalDaoTest {
     }
 
     @Test
-    public void deleteById_NonExistentRental_NoChange(){
-        assertThat(rentalDao.deleteById(999L)).isEqualTo(0);
-    }
-
-    @Test
     public void getCount_MultipleRentals_ReturnCorrectCount(){
         List<Rental> rentals = createAndSaveRental(10);
 

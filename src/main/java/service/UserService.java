@@ -3,6 +3,7 @@ package service;
 import dao.UserDao;
 import domain.User;
 import exception.EntityAlreadyExistsException;
+import exception.EntityNotFoundException;
 import exception.InvalidLoginInfoException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -31,13 +32,18 @@ public class UserService {
     }
 
     public boolean login(String userEmail, String password){
-        User loginUser = userDao.findByEmail(userEmail);
+        User loginUser;
 
-        if(encoder.matches(password,loginUser.getEncodedPassword())){
-            return true;
+        try{
+            loginUser = userDao.findByEmail(userEmail);
+        }catch(EntityNotFoundException e){
+            throw new InvalidLoginInfoException("아이디나 비밀번호가 일치하지 않습니다.");
         }
 
-        throw new InvalidLoginInfoException("아이디나 비밀번호가 일치하지 않습니다.");
+        if(!encoder.matches(password,loginUser.getEncodedPassword())){
+            throw new InvalidLoginInfoException("아이디나 비밀번호가 일치하지 않습니다.");
+        }
+        return true;
     }
 
     public User getUser(String userEmail){

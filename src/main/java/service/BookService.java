@@ -47,8 +47,8 @@ public class BookService {
 
     @Transactional
     public void addBook(Book book, int count){
-        if(count<0){
-            throw new IllegalArgumentException("책의 수량은 음수값을 가질 수 없습니다.");
+        if(count<=0){
+            throw new IllegalArgumentException("책의 수량은 1권 이상이여야 합니다.");
         }
         if(bookDao.existsByIsbn(book.getIsbn())){
             throw new EntityAlreadyExistsException("이미 등록된 도서입니다. ISBN : "+book.getIsbn());

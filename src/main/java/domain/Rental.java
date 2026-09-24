@@ -40,8 +40,8 @@ public class Rental {
     }
 
     private void validate(String userEmail, Long bookItemId, LocalDate rentedAt, LocalDate dueDate, LocalDate returnedAt, RentalStatus status){
-        if(userEmail==null){
-            throw new IllegalArgumentException("userEmail은 null일 수 없습니다.");
+        if(userEmail==null || userEmail.isBlank()){
+            throw new IllegalArgumentException("userEmail은 null이거나 빈 값일 수 없습니다.");
         }
         if(bookItemId==null){
             throw new IllegalArgumentException("bookItemId는 null일 수 없습니다.");

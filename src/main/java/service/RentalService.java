@@ -3,6 +3,8 @@ package service;
 import dao.RentalDao;
 import domain.Rental;
 import domain.enums.RentalStatus;
+import exception.BookAlreadyReturnedException;
+import exception.EntityNotFoundException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,7 +22,10 @@ public class RentalService {
     }
     //대여 정보 아이디 기준 단일 삭제
     public void deleteRentalById(Long id){
-        rentalDao.deleteById(id);
+        int count = rentalDao.deleteById(id);
+        if(count==0){
+            throw new EntityNotFoundException("대여 정보를 찾을 수 없습니다.");
+        }
     }
     //모든 대여 정보 조회
     public List<Rental> retrieveAllRentalHistory(){
@@ -46,20 +51,8 @@ public class RentalService {
         return rentalDao.findActiveRentalsByUserEmail(userEmail);
     }
 
-    //책 대여 정보 남기기
-    public void recoredRentalHistory(Long bookItemId, String userEmail){
-        Rental rental = Rental.create(userEmail,bookItemId);
-        rentalDao.add(rental);
-    }
-
-    //책 반납 정보 남기기
-    public void recoredReturnHistory(Long bookItemId){
-        Rental rental = rentalDao.findActiveRentalByBookItemId(bookItemId);
-        rentalDao.updateReturnedDate(rental.getId(),LocalDate.now());
-    }
-
-    public void recoredOverdueHistory(Long bookItemId){
-        Rental rental = rentalDao.findActiveRentalByBookItemId(bookItemId);
+    //스케줄러로 자정 넘어기면 OverDue처리
+    public void recordOverdueHistory(){
         rentalDao.updateOverdue(LocalDate.now());
     }
 }

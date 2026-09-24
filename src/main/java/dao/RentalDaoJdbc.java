@@ -124,4 +124,12 @@ public class RentalDaoJdbc implements RentalDao {
 
         return jdbcTemplate.update(sql,today);
     }
+
+    @Override
+    public boolean existsActiveRentalByUserEmailAndIsbn(String userEmail, String isbn) {
+        String sql = "select exists ( select 1 from rentals r join book_items bi on r.book_item_id = bi.id where r.user_email = ? and bi.isbn = ? and (r.status = 'RENTED' or r.status = 'OVERDUE'))";
+        Boolean exists = jdbcTemplate.queryForObject(sql, Boolean.class, userEmail, isbn);
+
+        return Boolean.TRUE.equals(exists);
+    }
 }

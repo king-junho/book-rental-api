@@ -34,4 +34,7 @@ public interface RentalDao{
 
     //대여 정보 개수 조회
     int getCount();
+
+    //중복 대여 방지
+    boolean existsActiveRentalByUserEmailAndIsbn(String userEmail, String isbn);
 }

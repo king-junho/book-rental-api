@@ -122,7 +122,7 @@ public class UserServiceUnitTest {
                 ));
 
         //when & then
-        assertThatThrownBy(()->userService.login(userEmail,rawPassword)).isInstanceOf(EntityNotFoundException.class);
+        assertThatThrownBy(()->userService.login(userEmail,rawPassword)).isInstanceOf(InvalidLoginInfoException.class);
         verify(userDao).findByEmail(userEmail);
 
         verify(encoder,never()).matches(anyString(),anyString());
