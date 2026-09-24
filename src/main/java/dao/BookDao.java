@@ -1,5 +1,6 @@
 package dao;
 
+import dao.model.BookSearchRow;
 import domain.Book;
 import domain.enums.SearchType;
 
@@ -11,6 +12,6 @@ public interface BookDao {
     boolean existsByIsbn(String isbn);
     Book findByIsbn(String isbn);
     void deleteByIsbn(String isbn);
-    List<Book> findBySearchType(SearchType searchType, String keyword, int limit, int offset);
+    List<BookSearchRow> findDetailsBySearchType(SearchType searchType, String keyword, int limit, int offset);
     int getCountBySearchType(SearchType searchType, String keyword);
 }

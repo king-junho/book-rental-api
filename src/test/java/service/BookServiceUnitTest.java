@@ -1,6 +1,7 @@
 package service;
 
 import dao.BookDao;
+import dao.model.BookSearchRow;
 import domain.Book;
 import service.model.BookDetail;
 import service.model.BookSearchResult;
@@ -71,13 +72,9 @@ public class BookServiceUnitTest {
         int totalCount = 5;
         int availableCount = 3;
 
+        BookSearchRow row = new BookSearchRow(book, 5, 3);
         when(bookDao.getCountBySearchType(type,title)).thenReturn(searchCount);
-
-        when(bookDao.findBySearchType(type,title,expectedPage.getPageSize(),expectedPage.getStartIndex())).thenReturn(List.of(book));
-
-        when(bookItemService.getBookCount(isbn)).thenReturn(totalCount);
-
-        when(bookItemService.getAvailableBookCount(isbn)).thenReturn(availableCount);
+        when(bookDao.findDetailsBySearchType(type,title,expectedPage.getPageSize(),expectedPage.getStartIndex())).thenReturn(List.of(row));
 
         //when
         BookSearchResult result = bookService.findBookBySearchType(type,title,currentPage);
@@ -94,10 +91,7 @@ public class BookServiceUnitTest {
         assertThat(result.page().getListCount()).isEqualTo(searchCount);
 
         verify(bookDao).getCountBySearchType(type, title);
-        verify(bookDao).findBySearchType(type, title, expectedPage.getPageSize(), expectedPage.getStartIndex());
-        verify(bookItemService).getBookCount(isbn);
-        verify(bookItemService).getAvailableBookCount(isbn);
-
+        verify(bookDao).findDetailsBySearchType(type, title, expectedPage.getPageSize(), expectedPage.getStartIndex());
     }
 
     @Test
@@ -197,20 +191,17 @@ public class BookServiceUnitTest {
 
         when(bookDao.findByIsbn(isbn)).thenReturn(book);
         when(bookItemService.getBookCount(isbn)).thenReturn(totalCount);
-        when(bookItemService.getAvailableBookCount(isbn))
-                .thenReturn(availableCount);
+        when(bookItemService.getAvailableBookCount(isbn)).thenReturn(availableCount);
 
         //when
         BookDetail result = bookService.findBookDetail(isbn);
 
         //then
-        assertThat(result.book()).isEqualTo(book);
+        assertThat(result.book()).isSameAs(book);
         assertThat(result.totalCount()).isEqualTo(totalCount);
         assertThat(result.availableCount()).isEqualTo(availableCount);
 
         verify(bookDao).findByIsbn(isbn);
-        verify(bookItemService).getBookCount(isbn);
-        verify(bookItemService).getAvailableBookCount(isbn);
     }
     @Test
     public void findBookDetail_NonExistentBook_ThrowEntityNotFoundException(){

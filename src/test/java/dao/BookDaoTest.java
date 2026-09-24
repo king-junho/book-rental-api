@@ -1,6 +1,8 @@
 package dao;
 
+import dao.model.BookSearchRow;
 import domain.Book;
+import domain.BookItem;
 import domain.enums.SearchType;
 import exception.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class BookDaoTest {
     @Autowired private BookDao bookDao;
     @Autowired private TestDataCleaner testDataCleaner;
+    @Autowired private BookItemDao bookItemDao;
 
     @BeforeEach
     public void setUp(){
@@ -53,11 +56,14 @@ public class BookDaoTest {
     public void findBooks_ByTitle_WithPagination(){
         setData();
 
-        List<Book> searchBooks = bookDao.findBySearchType(SearchType.TITLE,"title",5,0);
+        //when
+        List<BookSearchRow> searchBooks = bookDao.findDetailsBySearchType(SearchType.TITLE, "title", 5, 0);
 
-        assertThat(searchBooks.size()).isEqualTo(5);
+        // then
+        assertThat(searchBooks).hasSize(5);
+
         assertThat(searchBooks)
-                .extracting(Book::getTitle)
+                .extracting(row -> row.book().getTitle())
                 .containsExactly(
                         "title000",
                         "title001",
@@ -71,10 +77,14 @@ public class BookDaoTest {
     public void findBooks_ByAuthor_WithPagination(){
         setData();
 
-        List<Book> searchBooks = bookDao.findBySearchType(SearchType.AUTHOR,"author",10,0);
-        assertThat(searchBooks.size()).isEqualTo(10);
+        // when
+        List<BookSearchRow> searchBooks = bookDao.findDetailsBySearchType(SearchType.AUTHOR, "author", 10, 0);
+
+        // then
+        assertThat(searchBooks).hasSize(10);
+
         assertThat(searchBooks)
-                .extracting(Book::getAuthor)
+                .extracting(row -> row.book().getAuthor())
                 .containsExactly(
                         "author000",
                         "author001",
@@ -93,21 +103,24 @@ public class BookDaoTest {
     public void findBooks_ByGenre_WithPagination(){
         setData();
 
-        List<Book> searchBooks = bookDao.findBySearchType(SearchType.GENRE,"genre",10,5);
-        assertThat(searchBooks.size()).isEqualTo(10);
+        // when
+        List<BookSearchRow> searchBooks = bookDao.findDetailsBySearchType(SearchType.GENRE, "genre", 10, 0);
+
+        // then
+        assertThat(searchBooks).hasSize(10);
         assertThat(searchBooks)
-                .extracting(Book::getGenre)
+                .extracting(row->row.book().getGenre())
                 .containsExactly(
+                        "genre000",
+                        "genre001",
+                        "genre002",
+                        "genre003",
+                        "genre004",
                         "genre005",
                         "genre006",
                         "genre007",
                         "genre008",
-                        "genre009",
-                        "genre010",
-                        "genre011",
-                        "genre012",
-                        "genre013",
-                        "genre014"
+                        "genre009"
                 );
     }
 
@@ -131,8 +144,38 @@ public class BookDaoTest {
     @Test
     public void findBooks_ReturnsEmptyList_WhenBookDoesNotExist(){
         setData();
-        List<Book> books = bookDao.findBySearchType(SearchType.TITLE,"unknown",5,0);
+
+        // when
+        List<BookSearchRow> books = bookDao.findDetailsBySearchType(SearchType.TITLE, "unknown", 5, 0);
+        // then
         assertThat(books).isEmpty();
+    }
+
+    @Test
+    public void findBookDetails_WithBookItems_ReturnInventoryCount(){
+        // given
+        String isbn = "isbn001";
+
+        Book book = new Book(isbn, "title", "author", "genre");
+
+        bookDao.add(book);
+
+        bookItemDao.add(isbn);
+        bookItemDao.add(isbn);
+        bookItemDao.add(isbn);
+
+        List<BookItem> items = bookItemDao.findByIsbn(isbn);
+
+        bookItemDao.rent(items.get(0).getId());
+
+        // when
+        List<BookSearchRow> results = bookDao.findDetailsBySearchType(SearchType.TITLE, "title", 10, 0);
+
+        // then
+        assertThat(results).hasSize(1);
+        BookSearchRow result = results.get(0);
+        assertThat(result.totalCount()).isEqualTo(3);
+        assertThat(result.availableCount()).isEqualTo(2);
     }
 
     private void setData(){

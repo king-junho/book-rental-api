@@ -2,25 +2,36 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="
            http://www.springframework.org/schema/beans
            https://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/tx
-           https://www.springframework.org/schema/tx/spring-tx.xsd">
+           https://www.springframework.org/schema/tx/spring-tx.xsd
+           http://www.springframework.org/schema/context
+           https://www.springframework.org/schema/context/spring-context.xsd">
 
-    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <context:property-placeholder/>
+
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <constructor-arg ref="dataSource"/>
     </bean>
+
     <tx:annotation-driven transaction-manager="transactionManager"/>
+
     <bean id="testDataSetUp" class="dao.TestDataCleaner">
         <constructor-arg ref="jdbcTemplate"/>
     </bean>
+
     <bean id="rentalDao" class="dao.RentalDaoJdbc">
         <constructor-arg ref="jdbcTemplate"/>
     </bean>
+
     <bean id="rentalService" class="service.RentalService">
         <constructor-arg ref="rentalDao"/>
     </bean>
+
     <bean id="bookItemService" class="service.BookItemService">
         <constructor-arg ref="bookItemDao"/>
     </bean>
@@ -38,14 +49,16 @@
         <constructor-arg ref="jdbcTemplate"/>
     </bean>
 
-    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+    <bean id="jdbcTemplate"
+          class="org.springframework.jdbc.core.JdbcTemplate">
         <property name="dataSource" ref="dataSource"/>
     </bean>
 
-    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+    <bean id="dataSource"
+          class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="url" value="${DB_URL}"/>
         <property name="username" value="${DB_USERNAME}"/>
         <property name="password" value="${DB_PASSWORD}"/>
     </bean>
+
 </beans>

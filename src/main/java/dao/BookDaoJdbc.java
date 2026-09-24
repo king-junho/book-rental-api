@@ -1,5 +1,6 @@
 package dao;
 
+import dao.model.BookSearchRow;
 import domain.Book;
 import domain.enums.SearchType;
 import exception.EntityNotFoundException;
@@ -23,6 +24,16 @@ public class BookDaoJdbc implements BookDao {
 
         return new Book(isbn,title,author,genre);
     };
+
+    private final RowMapper<BookSearchRow> bookSearchMapper =(rs,rowNum) ->{
+        Book book = new Book(rs.getString("isbn"),rs.getString("title"),rs.getString("author"),rs.getString("genre"));
+
+        int totalCount = rs.getInt("total_count");
+        int availableCount = rs.getInt("available_count");
+
+        return new BookSearchRow(book,totalCount,availableCount);
+    };
+
     @Override
     public void deleteAll() {
         this.jdbcTemplate.execute("delete from books");
@@ -65,12 +76,18 @@ public class BookDaoJdbc implements BookDao {
     }
 
     @Override
-    public List<Book> findBySearchType(SearchType type, String keyword, int limit, int offset) {
+    public List<BookSearchRow> findDetailsBySearchType(SearchType type, String keyword, int limit, int offset) {
         String searchKeyword = "%"+keyword+"%";
         String colName = getColumnName(type);
-        String sql = "select isbn,title,author,genre from books where "+colName+" like ? order by isbn limit ? offset ?";
+        String sql =
+                """
+                select b.isbn, b.title, b.author, b.genre, count(bi.id) as total_count,
+                sum( case when bi.status = 'AVAILABLE' then 1 else 0 end) as available_count
+                from books b left join book_items bi on b.isbn = bi.isbn
+                where b.%s like ? group by b.isbn, b.title, b.author, b.genre order by b.isbn limit ? offset ?
+                """.formatted(colName);
 
-        return this.jdbcTemplate.query(sql,bookMapper,searchKeyword,limit,offset);
+        return this.jdbcTemplate.query(sql,bookSearchMapper,searchKeyword,limit,offset);
     }
 
     @Override

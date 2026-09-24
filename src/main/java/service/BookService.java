@@ -1,5 +1,6 @@
 package service;
 import dao.BookDao;
+import dao.model.BookSearchRow;
 import domain.Book;
 import service.model.Page;
 import domain.enums.SearchType;
@@ -20,7 +21,7 @@ public class BookService {
         this.bookDao = bookDao;
     }
 
-    //domain.Book 전체 삭제(Book_item도 같이 삭제)
+    //domain.Book 전체 삭제
     public void deleteAll() {
         bookDao.deleteAll();
     }
@@ -33,13 +34,13 @@ public class BookService {
     public BookSearchResult findBookBySearchType(SearchType type, String keyword, int currentPage){
         int searchCount = bookDao.getCountBySearchType(type, keyword);
         Page pageInfo = new Page(searchCount,currentPage);
-        List<Book> books = bookDao.findBySearchType(type,keyword, pageInfo.getPageSize(),pageInfo.getStartIndex());
+        List<BookSearchRow> rows = bookDao.findDetailsBySearchType(type, keyword, pageInfo.getPageSize(), pageInfo.getStartIndex());
 
-        List<BookDetail> bookDetails = books.stream().map(book-> new BookDetail(
-                book,
-                bookItemService.getBookCount(book.getIsbn()),
-                bookItemService.getAvailableBookCount(book.getIsbn())
-        )).toList();
+        List<BookDetail> bookDetails = rows.stream().map(row -> new BookDetail(
+                                row.book(),
+                                row.totalCount(),
+                                row.availableCount()
+                        )).toList();
 
         return new BookSearchResult(pageInfo, bookDetails);
     }
