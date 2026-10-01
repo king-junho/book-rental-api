@@ -1,5 +1,6 @@
 package kr.ac.hansung.kjh.bookrental.config;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,11 +30,13 @@ public class SecurityConfig {
                 .formLogin(auth -> auth.disable())
                 .httpBasic(auth -> auth.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(
                                 "/users/login",
                                 "/users/signup",
                                 "/books",
-                                "/books/{bookId}"
+                                "/books/{bookId}",
+                                "/books/search"
                         ).permitAll()
                         .requestMatchers("/rentals/**").authenticated()
                         .anyRequest().denyAll()

@@ -1,81 +1,61 @@
 package kr.ac.hansung.kjh.bookrental.service;
 
-import kr.ac.hansung.kjh.bookrental.dao.BookDao;
-import kr.ac.hansung.kjh.bookrental.dao.model.BookSearchRow;
-import kr.ac.hansung.kjh.bookrental.domain.Book;
+import kr.ac.hansung.kjh.bookrental.domain.enums.BookItemStatus;
 import kr.ac.hansung.kjh.bookrental.domain.enums.SearchType;
-import kr.ac.hansung.kjh.bookrental.exception.EntityAlreadyExistsException;
+import kr.ac.hansung.kjh.bookrental.dto.response.BookResponse;
+import kr.ac.hansung.kjh.bookrental.entity.BookEntity;
 import kr.ac.hansung.kjh.bookrental.exception.EntityNotFoundException;
-import kr.ac.hansung.kjh.bookrental.service.model.BookDetail;
-import kr.ac.hansung.kjh.bookrental.service.model.BookSearchResult;
-import kr.ac.hansung.kjh.bookrental.service.model.Page;
+import kr.ac.hansung.kjh.bookrental.repository.BookItemRepository;
+import kr.ac.hansung.kjh.bookrental.repository.BookRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 public class BookService {
-    private final BookItemService bookItemService;
-    private final BookDao bookDao;
+    private final BookRepository bookRepository;
+    private final BookItemRepository bookItemRepository;
 
-    public BookService(BookItemService bookItemService, BookDao bookDao) {
-        this.bookItemService = bookItemService;
-        this.bookDao = bookDao;
+    public BookService(BookRepository bookRepository, BookItemRepository bookItemRepository) {
+        this.bookRepository = bookRepository;
+        this.bookItemRepository = bookItemRepository;
     }
 
     //domain.Book 전체 삭제
     public void deleteAll() {
-        bookDao.deleteAll();
+        bookRepository.deleteAll();
     }
 
     //domain.Book ISBN으로 조회
-    public Book findBookById(String id) {
-        return bookDao.findByIsbn(id);
+    public BookResponse findBookById(String isbn) {
+        BookEntity bookData = bookRepository.findById(isbn).orElse(null);
+        int totalCount = bookItemRepository.countByIsbn(isbn);
+        int availableCount = bookItemRepository.countByIsbnAndStatus(isbn, BookItemStatus.AVAILABLE);
+
+        return BookResponse.from(bookData, totalCount, availableCount);
     }
 
-    public BookSearchResult findBookBySearchType(SearchType type, String keyword, int currentPage) {
-        int searchCount = bookDao.getCountBySearchType(type, keyword);
-        Page pageInfo = new Page(searchCount, currentPage);
-        List<BookSearchRow> rows = bookDao.findDetailsBySearchType(type, keyword, pageInfo.getPageSize(), pageInfo.getStartIndex());
+    public Page<BookEntity> findBookBySearchType(SearchType type, String keyword, int currentPage) {
 
-        List<BookDetail> bookDetails = rows.stream().map(row -> new BookDetail(
-                row.book(),
-                row.totalCount(),
-                row.availableCount()
-        )).toList();
+        Pageable pageable = PageRequest.of(currentPage, 5);
 
-        return new BookSearchResult(pageInfo, bookDetails);
-    }
+        Page<BookEntity> result = switch (type) {
+            case SearchType.TITLE -> bookRepository.findByTitleContaining(keyword, pageable);
+            case SearchType.AUTHOR -> bookRepository.findByAuthorContaining(keyword, pageable);
+            case SearchType.GENRE -> bookRepository.findByGenreContaining(keyword, pageable);
+        };
 
-    public void removeBookById(String id) {
-        if (!bookDao.existsByIsbn(id)) {
-            throw new EntityNotFoundException("삭제하려는 도서가 존재하지 않습니다. ISBN : " + id);
-        } else {
-            bookDao.deleteByIsbn(id);
-        }
+        return result;
     }
 
     @Transactional
-    public void addBook(Book book, int count) {
-        if (count <= 0) {
-            throw new IllegalArgumentException("책의 수량은 1권 이상이여야 합니다.");
-        }
-        if (bookDao.existsByIsbn(book.isbn())) {
-            throw new EntityAlreadyExistsException("이미 등록된 도서입니다. ISBN : " + book.isbn());
+    public void removeBookById(String isbn) {
+        if (!bookRepository.existsByIsbn(isbn)) {
+            throw new EntityNotFoundException("삭제하려는 도서가 존재하지 않습니다. ISBN : " + isbn);
         } else {
-            bookDao.add(book);
-            bookItemService.addBookItem(book.isbn(), count);
+            bookRepository.deleteById(isbn);
         }
-    }
-
-    public BookDetail findBookDetail(String isbn) {
-        Book book = bookDao.findByIsbn(isbn);
-
-        int totalCount = bookItemService.getBookCount(book.isbn());
-        int availableCount = bookItemService.getAvailableBookCount(book.isbn());
-
-        return new BookDetail(book, totalCount, availableCount);
     }
 }
-

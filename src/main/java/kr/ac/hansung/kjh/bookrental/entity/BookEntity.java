@@ -5,22 +5,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
-import lombok.Setter;
 
 @Entity
-@Table(name = "users")
+@Table(name = "books")
 @Getter
-@Setter
-public class UserEntity {
+public class BookEntity {
     @Id
-    private String email;
+    private String isbn;
 
     @NotBlank
-    private String password;
+    private String title;
 
     @NotBlank
-    private String name;
+    private String author;
 
     @NotBlank
-    private String role;
+    private String genre;
 }

@@ -1,16 +1,16 @@
 package kr.ac.hansung.kjh.bookrental.dto.response;
 
-import kr.ac.hansung.kjh.bookrental.service.model.BookDetail;
+import kr.ac.hansung.kjh.bookrental.entity.BookEntity;
 
 public record BookResponse(String isbn, String title, String author, String genre, int totalCount, int availableCount) {
-    public static BookResponse from(BookDetail detail) {
+    public static BookResponse from(BookEntity bookData, int totalCount, int availableCount) {
         return new BookResponse(
-                detail.book().isbn(),
-                detail.book().title(),
-                detail.book().author(),
-                detail.book().genre(),
-                detail.totalCount(),
-                detail.availableCount()
+                bookData.getIsbn(),
+                bookData.getTitle(),
+                bookData.getAuthor(),
+                bookData.getGenre(),
+                totalCount,
+                availableCount
         );
     }
 }

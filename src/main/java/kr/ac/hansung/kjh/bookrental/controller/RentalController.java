@@ -36,7 +36,7 @@ public class RentalController {
 
         return rentalService.retrieveUserRentalHistory(userEmail).stream().map(RentalResponse::from).toList();
     }
-
+    
     @PatchMapping("{rentalId}/return")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void returnBook(@PathVariable Long rentalId, Principal principal) {
