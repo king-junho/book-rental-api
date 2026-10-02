@@ -1,4 +1,9 @@
 package kr.ac.hansung.kjh.bookrental.dto.request;
 
-public record RentalCreateRequest(String isbn) {
+import jakarta.validation.constraints.NotBlank;
+
+public record RentalCreateRequest(
+        @NotBlank
+        String isbn
+) {
 }

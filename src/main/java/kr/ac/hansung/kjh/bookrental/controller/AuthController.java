@@ -1,5 +1,6 @@
 package kr.ac.hansung.kjh.bookrental.controller;
 
+import jakarta.validation.Valid;
 import kr.ac.hansung.kjh.bookrental.dto.request.LoginRequest;
 import kr.ac.hansung.kjh.bookrental.dto.response.TokenResponse;
 import kr.ac.hansung.kjh.bookrental.service.AuthService;
@@ -19,7 +20,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@RequestBody LoginRequest request) {
+    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
         String accessToken = authService.login(request.email(), request.password());
 
         return new TokenResponse(accessToken);

@@ -1,10 +1,9 @@
 package kr.ac.hansung.kjh.bookrental.controller;
 
-import kr.ac.hansung.kjh.bookrental.domain.enums.SearchType;
-import kr.ac.hansung.kjh.bookrental.dto.response.BookResponse;
-import kr.ac.hansung.kjh.bookrental.entity.BookEntity;
+import kr.ac.hansung.kjh.bookrental.dto.response.BookDetailResponse;
+import kr.ac.hansung.kjh.bookrental.dto.response.BookSearchResponse;
+import kr.ac.hansung.kjh.bookrental.enums.SearchType;
 import kr.ac.hansung.kjh.bookrental.service.BookService;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,8 +15,9 @@ public class BookController {
         this.bookService = bookService;
     }
 
+    //다중 책 조회
     @GetMapping("/search")
-    public Page<BookEntity> searchBooks(
+    public BookSearchResponse searchBooks(
             @RequestParam SearchType type,
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page
@@ -25,8 +25,9 @@ public class BookController {
         return bookService.findBookBySearchType(type, keyword, page);
     }
 
+    //단일 책 조회
     @GetMapping("/{isbn}")
-    public BookResponse getBook(
+    public BookDetailResponse getBook(
             @PathVariable String isbn
     ) {
         return bookService.findBookById(isbn);

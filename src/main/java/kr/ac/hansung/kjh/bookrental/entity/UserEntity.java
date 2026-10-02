@@ -4,13 +4,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity {
     @Id
     private String email;
@@ -21,6 +22,11 @@ public class UserEntity {
     @NotBlank
     private String name;
 
-    @NotBlank
-    private String role;
+    public static UserEntity createUser(String email, String password, String name) {
+        UserEntity user = new UserEntity();
+        user.email = email;
+        user.password = password;
+        user.name = name;
+        return user;
+    }
 }

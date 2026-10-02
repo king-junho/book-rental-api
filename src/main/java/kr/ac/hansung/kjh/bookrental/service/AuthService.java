@@ -21,7 +21,10 @@ public class AuthService {
         this.jwtTokenService = jwtTokenService;
     }
 
-    public String login(String userEmail, String password) {
+    public String login(
+            String userEmail,
+            String password
+    ) {
         Authentication authentication;
 
         try {

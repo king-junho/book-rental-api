@@ -16,25 +16,14 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public void deleteAll() {
-        userRepository.deleteAll();
-    }
-
     public void signup(String userEmail, String password, String name) {
         if (userRepository.existsByEmail(userEmail)) {
             throw new EntityAlreadyExistsException("이미 존재하는 아이디입니다.");
         }
 
-        UserEntity data = new UserEntity();
-        data.setEmail(userEmail);
-        data.setPassword(encoder.encode(password));
-        data.setName(name);
-        data.setRole("ROLE_USER");
+        String encodedPassword = encoder.encode(password);
+        UserEntity user = UserEntity.createUser(userEmail, encodedPassword, name);
 
-        userRepository.save(data);
-    }
-
-    public UserEntity getUser(String userEmail) {
-        return userRepository.findByEmail(userEmail);
+        userRepository.save(user);
     }
 }

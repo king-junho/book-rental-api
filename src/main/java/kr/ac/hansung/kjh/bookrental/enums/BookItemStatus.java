@@ -1,4 +1,4 @@
-package kr.ac.hansung.kjh.bookrental.domain.enums;
+package kr.ac.hansung.kjh.bookrental.enums;
 
 public enum BookItemStatus {
     AVAILABLE,

@@ -1,7 +1,7 @@
 package kr.ac.hansung.kjh.bookrental.repository;
 
-import kr.ac.hansung.kjh.bookrental.domain.enums.BookItemStatus;
 import kr.ac.hansung.kjh.bookrental.entity.BookItemEntity;
+import kr.ac.hansung.kjh.bookrental.enums.BookItemStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

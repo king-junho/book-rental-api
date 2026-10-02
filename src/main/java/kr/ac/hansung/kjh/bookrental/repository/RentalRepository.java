@@ -1,7 +1,7 @@
 package kr.ac.hansung.kjh.bookrental.repository;
 
-import kr.ac.hansung.kjh.bookrental.domain.enums.RentalStatus;
 import kr.ac.hansung.kjh.bookrental.entity.RentalEntity;
+import kr.ac.hansung.kjh.bookrental.enums.RentalStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -24,7 +24,7 @@ public interface RentalRepository extends JpaRepository<RentalEntity, Long> {
                 and bi.isbn = :isbn
                 and (r.status = 'RENTED' or r.status = 'OVERDUE') 
             """)
-    Boolean existsByRentaled(
+    boolean existsActiveRentalByUserEmailAndIsbn(
             @Param("userEmail") String userEmail,
             @Param("isbn") String isbn
     );

@@ -1,7 +1,7 @@
 package kr.ac.hansung.kjh.bookrental.dto.response;
 
-import kr.ac.hansung.kjh.bookrental.domain.enums.RentalStatus;
 import kr.ac.hansung.kjh.bookrental.entity.RentalEntity;
+import kr.ac.hansung.kjh.bookrental.enums.RentalStatus;
 
 import java.time.LocalDate;
 
