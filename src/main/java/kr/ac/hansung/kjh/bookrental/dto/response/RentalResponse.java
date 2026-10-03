@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public record RentalResponse(Long rentalId, Long bookItemId, LocalDate rentedAt, LocalDate dueDate,
                              LocalDate returnedAt, RentalStatus status) {
     public static RentalResponse from(RentalEntity rentalEntity) {
-        return new RentalResponse(rentalEntity.getId(), rentalEntity.getBookItemId(), rentalEntity.getRentedAt(), rentalEntity.getDueDate(), rentalEntity.getReturnedAt(), rentalEntity.getStatus());
+        return new RentalResponse(rentalEntity.getId(), rentalEntity.getBookItemId(), rentalEntity.getRentedAt(),
+                rentalEntity.getDueDate(), rentalEntity.getReturnedAt(), rentalEntity.getStatus());
     }
 }

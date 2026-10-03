@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import kr.ac.hansung.kjh.bookrental.enums.RentalStatus;
+import kr.ac.hansung.kjh.bookrental.exception.BookAlreadyReturnedException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,9 @@ public class RentalEntity {
     @Enumerated(EnumType.STRING)
     private RentalStatus status;
 
+    @Version
+    private Long version;
+
     public static RentalEntity create(String userEmail, Long bookItemId) {
         LocalDate now = LocalDate.now();
         RentalEntity rental = new RentalEntity();
@@ -47,5 +51,13 @@ public class RentalEntity {
         rental.status = RentalStatus.RENTED;
 
         return rental;
+    }
+
+    public void returnBook(LocalDate returnedDate) {
+        if (this.status == RentalStatus.RETURNED || this.returnedAt != null) {
+            throw new BookAlreadyReturnedException("이미 반납 처리 된 도서입니다. id: " + this.id);
+        }
+        this.returnedAt = returnedDate;
+        this.status = RentalStatus.RETURNED;
     }
 }

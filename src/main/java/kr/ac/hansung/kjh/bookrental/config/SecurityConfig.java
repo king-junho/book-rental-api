@@ -25,37 +25,20 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .formLogin(auth -> auth.disable())
-                .httpBasic(auth -> auth.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                        .requestMatchers(
-                                "/users/login",
-                                "/users/signup",
-                                "/books",
-                                "/books/{bookId}",
-                                "/books/search"
-                        ).permitAll()
-                        .requestMatchers("/rentals/**").authenticated()
-                        .anyRequest().denyAll()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults())
-                );
+        http.csrf(csrf -> csrf.disable()).formLogin(auth -> auth.disable()).httpBasic(
+                auth -> auth.disable()).authorizeHttpRequests(
+                auth -> auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll().requestMatchers("/users/login",
+                        "/users/signup", "/books", "/books/{bookId}", "/books/search").permitAll().requestMatchers(
+                        "/rentals/**").authenticated().anyRequest().denyAll()).sessionManagement(
+                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).oauth2ResourceServer(
+                oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder
-    ) {
+    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService,
+                                                       PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
 

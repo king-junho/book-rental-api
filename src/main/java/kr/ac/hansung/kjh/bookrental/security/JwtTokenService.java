@@ -20,16 +20,11 @@ public class JwtTokenService {
     private final String audience;
     private final Duration accessTokenTtl;
 
-    public JwtTokenService(
-            JwtEncoder jwtEncoder,
-            @Value("${jwt.issuer}") String issuer,
-            @Value("${jwt.audience}") String audience,
-            @Value("${jwt.access-token-ttl}") Duration accessTokenTtl
-    ) {
+    public JwtTokenService(JwtEncoder jwtEncoder, @Value("${jwt.issuer}") String issuer,
+                           @Value("${jwt.audience}") String audience,
+                           @Value("${jwt.access-token-ttl}") Duration accessTokenTtl) {
         if (accessTokenTtl.isZero() || accessTokenTtl.isNegative()) {
-            throw new IllegalArgumentException(
-                    "토큰 유효기간은 0보다 커야 합니다."
-            );
+            throw new IllegalArgumentException("토큰 유효기간은 0보다 커야 합니다.");
         }
 
         this.jwtEncoder = jwtEncoder;
@@ -41,20 +36,11 @@ public class JwtTokenService {
     public String createToken(String userEmail) {
         Instant now = Instant.now();
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer(issuer)
-                .subject(userEmail)
-                .audience(List.of(audience))
-                .issuedAt(now)
-                .expiresAt(now.plus(accessTokenTtl))
-                .build();
+        JwtClaimsSet claims = JwtClaimsSet.builder().issuer(issuer).subject(userEmail).audience(
+                List.of(audience)).issuedAt(now).expiresAt(now.plus(accessTokenTtl)).build();
 
-        JwsHeader header = JwsHeader
-                .with(MacAlgorithm.HS256)
-                .build();
+        JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
 
-        return jwtEncoder.encode(
-                JwtEncoderParameters.from(header, claims)
-        ).getTokenValue();
+        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
     }
 }

@@ -3,6 +3,7 @@ package kr.ac.hansung.kjh.bookrental.controller;
 import jakarta.validation.Valid;
 import kr.ac.hansung.kjh.bookrental.dto.request.RentalCreateRequest;
 import kr.ac.hansung.kjh.bookrental.dto.response.RentalResponse;
+import kr.ac.hansung.kjh.bookrental.service.RentalRetryFacade;
 import kr.ac.hansung.kjh.bookrental.service.RentalService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +15,11 @@ import java.util.List;
 @RequestMapping("/rentals")
 public class RentalController {
     private final RentalService rentalService;
+    private final RentalRetryFacade retryFacade;
 
-    public RentalController(RentalService rentalService) {
+    public RentalController(RentalService rentalService, RentalRetryFacade retryFacade) {
         this.rentalService = rentalService;
+        this.retryFacade = retryFacade;
     }
 
     @PostMapping
@@ -24,7 +27,7 @@ public class RentalController {
     public void rentBook(@Valid @RequestBody RentalCreateRequest request, Principal principal) {
         String userEmail = principal.getName();
 
-        rentalService.rentBook(userEmail, request.isbn());
+        retryFacade.rentBookWithRetry(userEmail, request.isbn());
     }
 
     @GetMapping("/me")

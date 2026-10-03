@@ -17,19 +17,14 @@ public class BookController {
 
     //다중 책 조회
     @GetMapping("/search")
-    public BookSearchResponse searchBooks(
-            @RequestParam SearchType type,
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page
-    ) {
+    public BookSearchResponse searchBooks(@RequestParam SearchType type, @RequestParam String keyword,
+                                          @RequestParam(defaultValue = "0") int page) {
         return bookService.findBookBySearchType(type, keyword, page);
     }
 
     //단일 책 조회
     @GetMapping("/{isbn}")
-    public BookDetailResponse getBook(
-            @PathVariable String isbn
-    ) {
+    public BookDetailResponse getBook(@PathVariable String isbn) {
         return bookService.findBookById(isbn);
     }
 }

@@ -13,27 +13,17 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService jwtTokenService;
 
-    public AuthService(
-            AuthenticationManager authenticationManager,
-            JwtTokenService jwtTokenService
-    ) {
+    public AuthService(AuthenticationManager authenticationManager, JwtTokenService jwtTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenService = jwtTokenService;
     }
 
-    public String login(
-            String userEmail,
-            String password
-    ) {
+    public String login(String userEmail, String password) {
         Authentication authentication;
 
         try {
             authentication = authenticationManager.authenticate(
-                    UsernamePasswordAuthenticationToken.unauthenticated(
-                            userEmail,
-                            password
-                    )
-            );
+                    UsernamePasswordAuthenticationToken.unauthenticated(userEmail, password));
         } catch (BadCredentialsException e) {
             throw new InvalidLoginInfoException("아이디나 비밀번호가 일치하지 않습니다.");
         }

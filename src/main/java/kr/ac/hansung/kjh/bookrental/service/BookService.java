@@ -13,34 +13,33 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BookService {
+    private static final int PAGE_SIZE = 5;
     private final BookRepository bookRepository;
     private final BookItemRepository bookItemRepository;
-
-    private static final int PAGE_SIZE = 5;
 
     public BookService(BookRepository bookRepository, BookItemRepository bookItemRepository) {
         this.bookRepository = bookRepository;
         this.bookItemRepository = bookItemRepository;
     }
 
-    //domain.Book ISBN으로 조회
+    @Transactional(readOnly = true)
     public BookDetailResponse findBookById(String isbn) {
-        BookEntity bookData = bookRepository.findById(isbn).orElseThrow(() -> new EntityNotFoundException("도서를 찾을 수 없습니다. ISBN: " + isbn));
+        BookEntity bookData = bookRepository.findById(isbn).orElseThrow(
+                () -> new EntityNotFoundException("도서를 찾을 수 없습니다. ISBN: " + isbn));
         int totalCount = bookItemRepository.countByIsbn(isbn);
         int availableCount = bookItemRepository.countByIsbnAndStatus(isbn, BookItemStatus.AVAILABLE);
 
         return BookDetailResponse.from(bookData, totalCount, availableCount);
     }
 
+    @Transactional(readOnly = true)
     public BookSearchResponse findBookBySearchType(SearchType type, String keyword, int currentPage) {
 
-        Pageable pageable = PageRequest.of(
-                currentPage,
-                PAGE_SIZE,
-                Sort.by(Sort.Direction.ASC, "isbn"));
+        Pageable pageable = PageRequest.of(currentPage, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "isbn"));
 
         Page<BookEntity> searchData = switch (type) {
             case SearchType.TITLE -> bookRepository.findByTitleContaining(keyword, pageable);
