@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RentalRetryFacade {
-    private final RentalService rentalService;
     private static final int MAX_TRY_COUNT = 3;
+    private final RentalService rentalService;
 
     public RentalRetryFacade(RentalService rentalService) {
         this.rentalService = rentalService;

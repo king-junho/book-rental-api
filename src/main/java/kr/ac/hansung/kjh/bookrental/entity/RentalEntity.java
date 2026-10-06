@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import kr.ac.hansung.kjh.bookrental.enums.RentalStatus;
-import kr.ac.hansung.kjh.bookrental.exception.BookAlreadyReturnedException;
+import kr.ac.hansung.kjh.bookrental.exception.CustomException;
+import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,7 +56,7 @@ public class RentalEntity {
 
     public void returnBook(LocalDate returnedDate) {
         if (this.status == RentalStatus.RETURNED || this.returnedAt != null) {
-            throw new BookAlreadyReturnedException("이미 반납 처리 된 도서입니다. id: " + this.id);
+            throw new CustomException(ErrorCode.RENTAL_ALREADY_RETURNED);
         }
         this.returnedAt = returnedDate;
         this.status = RentalStatus.RETURNED;

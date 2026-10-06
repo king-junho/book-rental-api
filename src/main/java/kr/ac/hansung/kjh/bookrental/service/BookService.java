@@ -5,7 +5,8 @@ import kr.ac.hansung.kjh.bookrental.dto.response.BookSearchResponse;
 import kr.ac.hansung.kjh.bookrental.entity.BookEntity;
 import kr.ac.hansung.kjh.bookrental.enums.BookItemStatus;
 import kr.ac.hansung.kjh.bookrental.enums.SearchType;
-import kr.ac.hansung.kjh.bookrental.exception.EntityNotFoundException;
+import kr.ac.hansung.kjh.bookrental.exception.CustomException;
+import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import kr.ac.hansung.kjh.bookrental.repository.BookItemRepository;
 import kr.ac.hansung.kjh.bookrental.repository.BookRepository;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,8 @@ public class BookService {
     @Transactional(readOnly = true)
     public BookDetailResponse findBookById(String isbn) {
         BookEntity bookData = bookRepository.findById(isbn).orElseThrow(
-                () -> new EntityNotFoundException("도서를 찾을 수 없습니다. ISBN: " + isbn));
+                () -> new CustomException(ErrorCode.BOOK_NOT_FOUND));
+
         int totalCount = bookItemRepository.countByIsbn(isbn);
         int availableCount = bookItemRepository.countByIsbnAndStatus(isbn, BookItemStatus.AVAILABLE);
 

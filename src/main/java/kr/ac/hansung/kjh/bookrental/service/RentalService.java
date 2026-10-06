@@ -4,8 +4,8 @@ import kr.ac.hansung.kjh.bookrental.dto.response.RentalResponse;
 import kr.ac.hansung.kjh.bookrental.entity.BookItemEntity;
 import kr.ac.hansung.kjh.bookrental.entity.RentalEntity;
 import kr.ac.hansung.kjh.bookrental.enums.BookItemStatus;
-import kr.ac.hansung.kjh.bookrental.exception.EntityNotFoundException;
-import kr.ac.hansung.kjh.bookrental.exception.RentalAccessDeniedException;
+import kr.ac.hansung.kjh.bookrental.exception.CustomException;
+import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import kr.ac.hansung.kjh.bookrental.repository.BookItemRepository;
 import kr.ac.hansung.kjh.bookrental.repository.RentalRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,7 +39,7 @@ public class RentalService {
                 BookItemStatus.AVAILABLE);
 
         if (availableBookItems.isEmpty()) {
-            throw new EntityNotFoundException("대여 가능한 도서가 없습니다. isbn: " + isbn);
+            throw new CustomException(ErrorCode.BOOK_OUT_OF_STOCK);
         }
 
         BookItemEntity bookItemEntity = availableBookItems.get(0);
@@ -51,15 +51,15 @@ public class RentalService {
     @Transactional
     public void returnBook(Long id, String userEmail) {
         RentalEntity rentalEntity = rentalRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("해당 도서 대여 기록이 없습니다. id: " + id));
+                () -> new CustomException(ErrorCode.RENTAL_NOT_FOUND));
 
         //본인의 대여 기록인지 확인
         if (!rentalEntity.getUserEmail().equals(userEmail)) {
-            throw new RentalAccessDeniedException("본인이 대여한 도서만 반납할 수 있습니다.");
+            throw new CustomException(ErrorCode.RENTAL_ACCESS_DENIED);
         }
 
         BookItemEntity bookItemEntity = bookItemRepository.findById(rentalEntity.getBookItemId()).orElseThrow(
-                () -> new EntityNotFoundException("반납할 도서가 존재하지 않습니다."));
+                () -> new CustomException(ErrorCode.BOOKITEM_NOT_FOUND));
 
         bookItemEntity.returnBook();
         rentalEntity.returnBook(LocalDate.now());

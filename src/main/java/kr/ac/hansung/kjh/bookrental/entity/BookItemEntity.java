@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import kr.ac.hansung.kjh.bookrental.enums.BookItemStatus;
-import kr.ac.hansung.kjh.bookrental.exception.BookAlreadyRentedException;
-import kr.ac.hansung.kjh.bookrental.exception.BookAlreadyReturnedException;
+import kr.ac.hansung.kjh.bookrental.exception.CustomException;
+import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import lombok.Getter;
 
 @Entity
@@ -28,14 +28,15 @@ public class BookItemEntity {
 
     public void rent() {
         if (this.status != BookItemStatus.AVAILABLE) {
-            throw new BookAlreadyRentedException("이미 대여 된 도서입니다. id: " + this.id);
+            throw new CustomException(ErrorCode.RENTAL_ALREADY_RENTED);
+
         }
         this.status = BookItemStatus.RENTED;
     }
 
     public void returnBook() {
         if (this.status == BookItemStatus.AVAILABLE) {
-            throw new BookAlreadyReturnedException("이미 반납 된 도서입니다. id: " + this.id);
+            throw new CustomException(ErrorCode.RENTAL_ALREADY_RETURNED);
         }
         this.status = BookItemStatus.AVAILABLE;
     }

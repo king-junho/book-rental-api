@@ -1,6 +1,7 @@
 package kr.ac.hansung.kjh.bookrental.service;
 
-import kr.ac.hansung.kjh.bookrental.exception.InvalidLoginInfoException;
+import kr.ac.hansung.kjh.bookrental.exception.CustomException;
+import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import kr.ac.hansung.kjh.bookrental.security.JwtTokenService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -25,7 +26,7 @@ public class AuthService {
             authentication = authenticationManager.authenticate(
                     UsernamePasswordAuthenticationToken.unauthenticated(userEmail, password));
         } catch (BadCredentialsException e) {
-            throw new InvalidLoginInfoException("아이디나 비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
         return jwtTokenService.createToken(authentication.getName());
     }

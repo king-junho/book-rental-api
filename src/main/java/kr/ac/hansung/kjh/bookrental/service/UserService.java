@@ -1,7 +1,8 @@
 package kr.ac.hansung.kjh.bookrental.service;
 
 import kr.ac.hansung.kjh.bookrental.entity.UserEntity;
-import kr.ac.hansung.kjh.bookrental.exception.EntityAlreadyExistsException;
+import kr.ac.hansung.kjh.bookrental.exception.CustomException;
+import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import kr.ac.hansung.kjh.bookrental.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class UserService {
 
     public void signup(String userEmail, String password, String name) {
         if (userRepository.existsByEmail(userEmail)) {
-            throw new EntityAlreadyExistsException("이미 존재하는 아이디입니다.");
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         String encodedPassword = encoder.encode(password);
