@@ -6,11 +6,14 @@ import jakarta.validation.constraints.NotNull;
 import kr.ac.hansung.kjh.bookrental.enums.BookItemStatus;
 import kr.ac.hansung.kjh.bookrental.exception.CustomException;
 import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @Table(name = "book_items")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BookItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +28,15 @@ public class BookItemEntity {
 
     @Version
     private Long version;
+
+    public static BookItemEntity create(Long id, String isbn, BookItemStatus status) {
+        BookItemEntity bookItemEntity = new BookItemEntity();
+        bookItemEntity.id = id;
+        bookItemEntity.isbn = isbn;
+        bookItemEntity.status = status;
+
+        return bookItemEntity;
+    }
 
     public void rent() {
         if (this.status != BookItemStatus.AVAILABLE) {

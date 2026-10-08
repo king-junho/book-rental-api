@@ -40,7 +40,6 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public BookSearchResponse findBookBySearchType(SearchType type, String keyword, int currentPage) {
-
         Pageable pageable = PageRequest.of(currentPage, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "isbn"));
 
         Page<BookEntity> searchData = switch (type) {
