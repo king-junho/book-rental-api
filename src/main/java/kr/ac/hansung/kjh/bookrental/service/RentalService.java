@@ -8,10 +8,10 @@ import kr.ac.hansung.kjh.bookrental.exception.CustomException;
 import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import kr.ac.hansung.kjh.bookrental.repository.BookItemRepository;
 import kr.ac.hansung.kjh.bookrental.repository.RentalRepository;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,10 +20,12 @@ public class RentalService {
 
     private final RentalRepository rentalRepository;
     private final BookItemRepository bookItemRepository;
+    private final Clock clock;
 
-    public RentalService(RentalRepository rentalRepository, BookItemRepository bookItemRepository) {
+    public RentalService(RentalRepository rentalRepository, BookItemRepository bookItemRepository, Clock clock) {
         this.rentalRepository = rentalRepository;
         this.bookItemRepository = bookItemRepository;
+        this.clock = clock;
     }
 
     //유저가 대여했던 정보 전체 조회
@@ -44,8 +46,9 @@ public class RentalService {
 
         BookItemEntity bookItemEntity = availableBookItems.get(0);
         bookItemEntity.rent();
+        LocalDate rentedAt = LocalDate.now(clock);
 
-        rentalRepository.save(RentalEntity.create(userEmail, bookItemEntity.getId()));
+        rentalRepository.save(RentalEntity.create(userEmail, bookItemEntity.getId(), rentedAt));
     }
 
     @Transactional
@@ -62,14 +65,14 @@ public class RentalService {
                 () -> new CustomException(ErrorCode.BOOKITEM_NOT_FOUND));
 
         bookItemEntity.returnBook();
-        rentalEntity.returnBook(LocalDate.now());
+        LocalDate returnAt = LocalDate.now(clock);
+        rentalEntity.returnBook(returnAt);
     }
 
     //스케줄러로 자정 넘어기면 OverDue처리
-    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void markOverdue() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         rentalRepository.updateOverdue(today);
     }
 }

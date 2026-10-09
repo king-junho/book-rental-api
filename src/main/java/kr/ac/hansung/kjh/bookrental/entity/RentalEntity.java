@@ -42,13 +42,12 @@ public class RentalEntity {
     @Version
     private Long version;
 
-    public static RentalEntity create(String userEmail, Long bookItemId) {
-        LocalDate now = LocalDate.now();
+    public static RentalEntity create(String userEmail, Long bookItemId, LocalDate rentedAt) {
         RentalEntity rental = new RentalEntity();
         rental.userEmail = userEmail;
         rental.bookItemId = bookItemId;
-        rental.rentedAt = now;
-        rental.dueDate = now.plusDays(14);
+        rental.rentedAt = rentedAt;
+        rental.dueDate = rentedAt.plusDays(14);
         rental.status = RentalStatus.RENTED;
 
         return rental;

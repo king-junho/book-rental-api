@@ -9,14 +9,17 @@ import kr.ac.hansung.kjh.bookrental.exception.CustomException;
 import kr.ac.hansung.kjh.bookrental.exception.ErrorCode;
 import kr.ac.hansung.kjh.bookrental.repository.BookItemRepository;
 import kr.ac.hansung.kjh.bookrental.repository.RentalRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,22 +31,31 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 public class RentalServiceTest {
+    private static final LocalDate TODAY = LocalDate.of(2026, 10, 5);
+    private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
+
     @Mock
     private RentalRepository rentalRepository;
 
     @Mock
     private BookItemRepository bookItemRepository;
 
-    @InjectMocks
     private RentalService rentalService;
+
+    @BeforeEach
+    void setUp() {
+        Clock fixedClock = Clock.fixed(TODAY.atStartOfDay(ZONE).toInstant(), ZONE);
+
+        rentalService = new RentalService(rentalRepository, bookItemRepository, fixedClock);
+    }
 
     @Test
     @DisplayName("대여 기록이 있으면 각 기록을 응답 DTO로 변환하여 반환한다")
     void retrieveUserRentalHistory_returnsResponses_whenRentalsExist() {
         // given
         String userEmail = "text@example.com";
-        RentalEntity firstRental = RentalEntity.create(userEmail, 1L);
-        RentalEntity secondRental = RentalEntity.create(userEmail, 2L);
+        RentalEntity firstRental = RentalEntity.create(userEmail, 1L, TODAY);
+        RentalEntity secondRental = RentalEntity.create(userEmail, 2L, TODAY);
 
         given(rentalRepository.findByUserEmail(userEmail)).willReturn(List.of(firstRental, secondRental));
 
@@ -105,6 +117,8 @@ public class RentalServiceTest {
         assertThat(savedRental.getUserEmail()).isEqualTo(userEmail);
         assertThat(savedRental.getBookItemId()).isEqualTo(1L);
         assertThat(savedRental.getStatus()).isEqualTo(RentalStatus.RENTED);
+        assertThat(savedRental.getRentedAt()).isEqualTo(TODAY);
+        assertThat(savedRental.getDueDate()).isEqualTo(TODAY.plusDays(14));
         assertThat(savedRental.getReturnedAt()).isNull();
     }
 
@@ -131,7 +145,7 @@ public class RentalServiceTest {
         Long rentalId = 10L;
         Long bookItemId = 1L;
         String userEmail = "test@example.com";
-        RentalEntity rentalEntity = RentalEntity.create(userEmail, bookItemId);
+        RentalEntity rentalEntity = RentalEntity.create(userEmail, bookItemId, TODAY);
         BookItemEntity bookItemEntity = BookItemEntity.create(bookItemId, "test_isbn", BookItemStatus.RENTED);
 
         given(rentalRepository.findById(rentalId)).willReturn(Optional.of(rentalEntity));
@@ -143,7 +157,7 @@ public class RentalServiceTest {
         // then
         assertThat(bookItemEntity.getStatus()).isEqualTo(BookItemStatus.AVAILABLE);
         assertThat(rentalEntity.getStatus()).isEqualTo(RentalStatus.RETURNED);
-        assertThat(rentalEntity.getReturnedAt()).isNotNull();
+        assertThat(rentalEntity.getReturnedAt()).isEqualTo(TODAY);
     }
 
     @Test
@@ -168,7 +182,7 @@ public class RentalServiceTest {
         Long bookItemId = 1L;
         String ownerEmail = "owner@example.com";
         String requesterEmail = "other@example.com";
-        RentalEntity rentalEntity = RentalEntity.create(ownerEmail, bookItemId);
+        RentalEntity rentalEntity = RentalEntity.create(ownerEmail, bookItemId, TODAY);
 
         given(rentalRepository.findById(1L)).willReturn(Optional.of(rentalEntity));
 
@@ -189,7 +203,7 @@ public class RentalServiceTest {
         Long bookItemId = 1L;
         String userEmail = "test@example.com";
 
-        RentalEntity rentalEntity = RentalEntity.create(userEmail, bookItemId);
+        RentalEntity rentalEntity = RentalEntity.create(userEmail, bookItemId, TODAY);
 
         given(rentalRepository.findById(rentalId)).willReturn(Optional.of(rentalEntity));
         given(bookItemRepository.findById(bookItemId)).willReturn(Optional.empty());
@@ -202,4 +216,13 @@ public class RentalServiceTest {
         assertThat(rentalEntity.getReturnedAt()).isNull();
     }
 
+    @Test
+    @DisplayName("현재 날짜를 기준으로 연체 갱신을 요청한다")
+    void markOverdue_updatesRentals_usingCurrentDate() {
+        // when
+        rentalService.markOverdue();
+
+        // then
+        verify(rentalRepository).updateOverdue(TODAY);
+    }
 }
