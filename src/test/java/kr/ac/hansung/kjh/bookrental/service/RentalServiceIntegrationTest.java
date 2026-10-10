@@ -18,17 +18,27 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest(properties = {"spring.jpa.hibernate.ddl-auto=create-drop", "spring.sql.init.mode=never"})
-@Import({RentalService.class, RentalServiceIntegrationTest.FixedClockConfig.class})
+@Import({RentalService.class, RentalRetryFacade.class, RentalServiceIntegrationTest.FixedClockConfig.class})
 class RentalServiceIntegrationTest {
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 10);
 
@@ -43,6 +53,9 @@ class RentalServiceIntegrationTest {
 
     @Autowired
     private RentalRepository rentalRepository;
+
+    @Autowired
+    private RentalRetryFacade rentalRetryFacade;
 
     @Autowired
     private EntityManager entityManager;
@@ -229,6 +242,179 @@ class RentalServiceIntegrationTest {
         assertThat(rentals).extracting(RentalEntity::getBookItemId).containsOnly(bookItemId);
 
         assertThat(actualBookItem.getStatus()).isEqualTo(BookItemStatus.RENTED);
+    }
+
+    @Test
+    @DisplayName("책 한 권을 여러명이 동시에 대여를 요청하면 한 명만 성공한다")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void rentBook_allowsOnlyOneSuccess_whenUsersCompeteForOneCopy() throws Exception {
+        // given
+        String isbn = "isbn";
+        int requestCount = 5;
+
+        List<String> userEmails = IntStream.range(0, requestCount).mapToObj(
+                i -> String.format("test%03d@example.com", i)).toList();
+
+        saveBook(isbn);
+
+        BookItemEntity bookItem = saveBookItem(isbn, BookItemStatus.AVAILABLE);
+        Long bookItemId = bookItem.getId();
+
+        CountDownLatch ready = new CountDownLatch(requestCount);
+        CountDownLatch start = new CountDownLatch(1);
+
+        ExecutorService executor = Executors.newFixedThreadPool(requestCount);
+        List<Future<Boolean>> futures = new ArrayList<>();
+
+        try {
+            for (String userEmail : userEmails) {
+                futures.add(executor.submit(() -> {
+                    ready.countDown();
+
+                    if (!start.await(5, SECONDS)) {
+                        throw new AssertionError("대여 시작 신호를 받지 못했습니다.");
+                    }
+                    try {
+                        rentalRetryFacade.rentBookWithRetry(userEmail, isbn);
+                        return true;
+                    } catch (CustomException e) {
+                        if (e.getErrorCode() == ErrorCode.BOOK_OUT_OF_STOCK) {
+                            return false;
+                        }
+                        throw e;
+                    }
+                }));
+            }
+
+            // when
+            assertThat(ready.await(5, SECONDS)).as("모든 대여 요청이 실행 준비를 마쳤는지").isTrue();
+
+            start.countDown();
+
+            int successCount = 0;
+
+            for (Future<Boolean> future : futures) {
+                if (future.get(10, SECONDS)) {
+                    successCount++;
+                }
+            }
+
+            // then
+            assertThat(successCount).isEqualTo(1);
+
+            BookItemEntity actualBookItem = bookItemRepository.findById(bookItemId).orElseThrow();
+
+            assertThat(actualBookItem.getStatus()).isEqualTo(BookItemStatus.RENTED);
+
+            List<RentalEntity> savedRentals = userEmails.stream().flatMap(
+                    email -> rentalRepository.findByUserEmail(email).stream()).toList();
+
+            assertThat(savedRentals).hasSize(1);
+            assertThat(savedRentals.get(0).getBookItemId()).isEqualTo(bookItemId);
+            assertThat(savedRentals.get(0).getStatus()).isEqualTo(RentalStatus.RENTED);
+        } finally {
+            start.countDown();
+            executor.shutdown();
+
+            boolean terminated = executor.awaitTermination(5, SECONDS);
+
+            assertThat(terminated).as("DB 정리 전에 작업 스레드가 모두 종료됐는지").isTrue();
+
+            for (String userEmail : userEmails) {
+                rentalRepository.deleteAll(rentalRepository.findByUserEmail(userEmail));
+            }
+
+            bookItemRepository.deleteById(bookItemId);
+            bookRepository.deleteById(isbn);
+        }
+    }
+
+    @Test
+    @DisplayName("반납 동시성 제어")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void returnBook_allowsOnlyOneSuccess_whenUserCompeteForOneCopy() throws Exception {
+        // given
+        String isbn = "isbn";
+        String userEmail = "test@example.com";
+        int requestCount = 2;
+
+        saveBook(isbn);
+
+        BookItemEntity bookItem = saveBookItem(isbn, BookItemStatus.RENTED);
+        Long bookItemId = bookItem.getId();
+
+        RentalEntity rental = rentalRepository.save(RentalEntity.create(userEmail, bookItemId, TODAY.minusDays(5)));
+        Long rentalId = rental.getId();
+
+        long bookItemVersion = bookItem.getVersion();
+        long rentalVersion = rental.getVersion();
+
+        CountDownLatch ready = new CountDownLatch(requestCount);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(requestCount);
+        List<Future<Boolean>> futures = new ArrayList<>();
+
+        try {
+            for (int i = 0; i < requestCount; i++) {
+                futures.add(executor.submit(() -> {
+                    ready.countDown();
+
+                    if (!start.await(5, SECONDS)) {
+                        throw new AssertionError("반납 신호를 받지 못했습니다.");
+                    }
+                    try {
+                        rentalService.returnBook(rentalId, userEmail);
+                        return true;
+                    } catch (OptimisticLockingFailureException e) {
+                        return false;
+                    } catch (CustomException e) {
+                        if (e.getErrorCode() == ErrorCode.RENTAL_ALREADY_RETURNED) {
+                            return false;
+                        }
+                        throw e;
+                    }
+                }));
+            }
+            // when
+            assertThat(ready.await(5, SECONDS)).isTrue();
+            start.countDown();
+
+            int successCount = 0;
+
+            for (Future<Boolean> future : futures) {
+                if (future.get(10, SECONDS)) {
+                    successCount++;
+                }
+            }
+
+            // then
+            assertThat(successCount).isEqualTo(1);
+
+            BookItemEntity actualBookItem = bookItemRepository.findById(bookItemId).orElseThrow();
+            assertThat(actualBookItem.getStatus()).isEqualTo(BookItemStatus.AVAILABLE);
+
+            RentalEntity actualRental = rentalRepository.findById(rentalId).orElseThrow();
+            assertThat(actualRental.getStatus()).isEqualTo(RentalStatus.RETURNED);
+            assertThat(actualRental.getReturnedAt()).isEqualTo(TODAY);
+
+            assertThat(actualBookItem.getVersion()).isEqualTo(bookItemVersion + 1);
+            assertThat(actualRental.getVersion()).isEqualTo(rentalVersion + 1);
+        } finally {
+            start.countDown();
+            executor.shutdown();
+
+            boolean terminated = executor.awaitTermination(5, SECONDS);
+            if (!terminated) {
+                executor.shutdownNow();
+                terminated = executor.awaitTermination(5, SECONDS);
+            }
+
+            assertThat(terminated).as("DB 정리 전에 스레드 모두 종료 됐는지").isTrue();
+
+            rentalRepository.deleteById(rentalId);
+            bookItemRepository.deleteById(bookItemId);
+            bookRepository.deleteById(isbn);
+        }
     }
 
     private void flushAndClear() {
