@@ -1,0 +1,15 @@
+spring:
+  flyway:
+    enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  sql:
+    init:
+      mode: never
+
+logging:
+  level:
+    org.springframework.security: INFO

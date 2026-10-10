@@ -12,7 +12,8 @@ spring:
   mvc:
     problemdetails:
       enabled: true
-
+  flyway:
+    enabled: false
 jwt:
   secret: ${JWT_SECRET}
   issuer: book-rental-api
