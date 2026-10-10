@@ -30,7 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
-public class RentalServiceTest {
+class RentalServiceTest {
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 5);
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
@@ -96,8 +96,8 @@ public class RentalServiceTest {
         String userEmail = "test@example.com";
         String isbn = "test_isbn";
 
-        BookItemEntity firstBookItemEntity = BookItemEntity.create(1L, isbn, BookItemStatus.AVAILABLE);
-        BookItemEntity secondBookItemEntity = BookItemEntity.create(2L, isbn, BookItemStatus.AVAILABLE);
+        BookItemEntity firstBookItemEntity = BookItemEntity.create(isbn, BookItemStatus.AVAILABLE);
+        BookItemEntity secondBookItemEntity = BookItemEntity.create(isbn, BookItemStatus.AVAILABLE);
 
         given(bookItemRepository.findByIsbnAndStatus(isbn, BookItemStatus.AVAILABLE)).willReturn(
                 List.of(firstBookItemEntity, secondBookItemEntity));
@@ -115,7 +115,6 @@ public class RentalServiceTest {
         RentalEntity savedRental = captor.getValue();
 
         assertThat(savedRental.getUserEmail()).isEqualTo(userEmail);
-        assertThat(savedRental.getBookItemId()).isEqualTo(1L);
         assertThat(savedRental.getStatus()).isEqualTo(RentalStatus.RENTED);
         assertThat(savedRental.getRentedAt()).isEqualTo(TODAY);
         assertThat(savedRental.getDueDate()).isEqualTo(TODAY.plusDays(14));
@@ -143,13 +142,13 @@ public class RentalServiceTest {
     void returnBook_updatesItemAndRental_whenRequestedByOwner() {
         // given
         Long rentalId = 10L;
-        Long bookItemId = 1L;
         String userEmail = "test@example.com";
-        RentalEntity rentalEntity = RentalEntity.create(userEmail, bookItemId, TODAY);
-        BookItemEntity bookItemEntity = BookItemEntity.create(bookItemId, "test_isbn", BookItemStatus.RENTED);
+        BookItemEntity bookItemEntity = BookItemEntity.create("test_isbn", BookItemStatus.RENTED);
+        RentalEntity rentalEntity = RentalEntity.create(userEmail, bookItemEntity.getId(), TODAY);
+
 
         given(rentalRepository.findById(rentalId)).willReturn(Optional.of(rentalEntity));
-        given(bookItemRepository.findById(bookItemId)).willReturn(Optional.of(bookItemEntity));
+        given(bookItemRepository.findById(bookItemEntity.getId())).willReturn(Optional.of(bookItemEntity));
 
         // when
         rentalService.returnBook(rentalId, userEmail);

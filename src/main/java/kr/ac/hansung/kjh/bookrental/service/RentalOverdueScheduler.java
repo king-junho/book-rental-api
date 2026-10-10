@@ -5,8 +5,6 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 @Component
 public class RentalOverdueScheduler {
@@ -17,21 +15,14 @@ public class RentalOverdueScheduler {
     }
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
-    @SchedulerLock(name = "markOverdue", lockAtMostFor = "30s", lockAtLeastFor = "10s")
+    @SchedulerLock(name = "markOverdue", lockAtMostFor = "60s", lockAtLeastFor = "10s")
     public void run() {
-
-        long startedAt = System.nanoTime();
-
         try {
             rentalService.markOverdue();
-            log.info("연체 갱신 완료: elapsedMs={}", elapsedMillis(startedAt));
+            log.info("연체 갱신 완료");
         } catch (RuntimeException e) {
-            log.error("연체 갱신 실패: elapsedMs={}", elapsedMillis(startedAt), e);
+            log.error("연체 갱신 실패");
             throw e;
         }
-    }
-
-    private static long elapsedMillis(long startedAt) {
-        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt);
     }
 }

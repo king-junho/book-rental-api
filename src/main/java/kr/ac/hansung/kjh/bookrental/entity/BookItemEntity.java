@@ -29,9 +29,8 @@ public class BookItemEntity {
     @Version
     private Long version;
 
-    public static BookItemEntity create(Long id, String isbn, BookItemStatus status) {
+    public static BookItemEntity create(String isbn, BookItemStatus status) {
         BookItemEntity bookItemEntity = new BookItemEntity();
-        bookItemEntity.id = id;
         bookItemEntity.isbn = isbn;
         bookItemEntity.status = status;
 
